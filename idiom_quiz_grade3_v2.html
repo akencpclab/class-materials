@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小三年級成語挑戰賽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0fdf4; }
+        .option-btn { transition: transform 0.1s, background-color 0.15s, border-color 0.15s; }
+        .option-btn:hover:not(:disabled) { transform: translateY(-1px); }
+        .option-btn:active:not(:disabled) { transform: scale(0.99); }
+        .correct-flash { animation: correctPulse 0.4s ease-out; }
+        @keyframes correctPulse {
+            0%   { background-color: #d1fae5; }
+            50%  { background-color: #6ee7b7; }
+            100% { background-color: #d1fae5; }
+        }
+        .progress-fill { background: linear-gradient(90deg, #10b981, #059669); transition: width 0.4s ease; }
+        .fade-in { animation: fadeUp 0.25s ease-out; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .shake { animation: shake 0.35s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-6px); }
+            40%       { transform: translateX(6px); }
+            60%       { transform: translateX(-4px); }
+            80%       { transform: translateX(4px); }
+        }
+        #auto-advance-bar-fill { animation: shrink 0.5s linear forwards; }
+        @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-gray-800 pb-12">
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-emerald-600 text-white shadow-md p-4 sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                <span>🎒</span> 國小三年級成語填空挑戰
+            </h1>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1 bg-emerald-700 rounded-full px-3 py-1">
+                    <span class="text-xs">字體：</span>
+                    <button onclick="changeFontSize(-2)" class="px-2 py-0.5 hover:bg-emerald-800 rounded font-bold">A-</button>
+                    <span id="fontSizeDisplay" class="font-bold text-sm">中</span>
+                    <button onclick="changeFontSize(2)" class="px-2 py-0.5 hover:bg-emerald-800 rounded font-bold">A+</button>
+                </div>
+                <button id="muteBtn" onclick="toggleMute()" class="p-2 bg-emerald-700 hover:bg-emerald-800 rounded-full text-lg">🔊</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
+
+        <!-- 開始畫面 -->
+        <div id="start-screen" class="bg-white rounded-2xl shadow-xl p-6 md:p-10 text-center border-4 border-emerald-400 fade-in">
+            <div class="text-6xl mb-4">🐰📚</div>
+            <h2 class="text-3xl font-bold text-emerald-700 mb-4">成語填空挑戰賽</h2>
+            <p class="text-gray-600 mb-3 text-lg leading-relaxed">
+                本測驗共有 <span class="font-bold text-emerald-600 text-xl">20</span> 題成語填空。<br>
+                請仔細閱讀句子，選出空格中最適合的成語！
+            </p>
+            <p class="text-gray-400 text-sm mb-8">✦ 題目與選項皆會隨機排列 ✦ 答對自動跳下一題 ✦</p>
+            <button onclick="startQuiz()" class="bg-orange-500 hover:bg-orange-600 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 duration-200">
+                🎯 開始挑戰！
+            </button>
+        </div>
+
+        <!-- 作答畫面 -->
+        <div id="quiz-screen" class="hidden">
+            <div class="mb-3">
+                <div class="flex justify-between text-sm text-gray-500 font-bold mb-1 px-1">
+                    <span id="question-number">第 1 / 20 題</span>
+                    <span id="score-display" class="text-emerald-700">目前分數：0 分</span>
+                </div>
+                <div class="bg-gray-200 rounded-full h-4 shadow-inner overflow-hidden">
+                    <div id="progress-bar" class="progress-fill h-4 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 題目卡 -->
+            <div class="bg-white rounded-2xl shadow-xl p-5 md:p-8 border-4 border-emerald-300 mb-4" id="question-card">
+                <div id="question-text" class="font-bold text-gray-800 mb-5 leading-relaxed"></div>
+                <div id="options-container" class="space-y-3"></div>
+            </div>
+
+            <!-- 答對自動跳題提示條 -->
+            <div id="auto-advance-notice" class="hidden mb-4 rounded-xl overflow-hidden bg-emerald-100 border border-emerald-300">
+                <div class="px-4 py-2 flex items-center gap-3 text-emerald-800 font-bold text-sm">
+                    <span class="text-lg">🎉</span>
+                    <span>答對了！即將自動跳下一題…</span>
+                </div>
+                <div class="bg-gray-200 h-2">
+                    <div id="auto-advance-bar-fill" class="bg-emerald-500 h-2"></div>
+                </div>
+            </div>
+
+            <!-- 反饋區（答錯時顯示） -->
+            <div id="feedback-panel" class="hidden fade-in">
+                <div id="feedback-box" class="rounded-xl p-5 text-white mb-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <span id="feedback-icon" class="text-4xl"></span>
+                        <div>
+                            <h3 id="feedback-title" class="text-xl font-bold"></h3>
+                            <p id="correct-answer-show" class="text-sm opacity-90 mt-1"></p>
+                        </div>
+                    </div>
+                    <button onclick="nextQuestion()" class="bg-white text-gray-800 font-bold py-2 px-8 rounded-lg shadow hover:bg-gray-100 transition whitespace-nowrap text-base">
+                        下一題 ➡️
+                    </button>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-5 border-2 border-orange-200 shadow-md mb-4">
+                    <h4 class="text-orange-800 font-bold text-lg mb-2 flex items-center gap-2">
+                        <span>💡</span> 成語智慧寶庫
+                    </h4>
+                    <hr class="border-orange-200 mb-3">
+                    <div id="idiom-explanation" class="text-gray-700 leading-relaxed space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="hidden fade-in">
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 text-center border-4 border-emerald-400 mb-6">
+                <div id="result-trophy" class="text-6xl mb-3">🏆</div>
+                <h2 class="text-3xl font-bold text-emerald-700 mb-1">挑戰結束！</h2>
+                <p id="result-comment" class="text-gray-500 mb-6 text-base"></p>
+                <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto mb-8 bg-emerald-50 p-5 rounded-xl border border-emerald-100">
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">總題數</div>
+                        <div class="text-2xl font-bold text-gray-700">20</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">答對題數</div>
+                        <div id="correct-count" class="text-2xl font-bold text-emerald-600">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 mb-1">最終得分</div>
+                        <div id="final-score" class="text-3xl font-bold text-orange-500">0 分</div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="restartQuiz()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-full shadow transition">
+                        🔄 再挑戰一次
+                    </button>
+                    <a href="#notebook-section" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full shadow transition inline-block">
+                        📝 前往錯題複習區
+                    </a>
+                </div>
+            </div>
+
+            <div id="notebook-section" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-4 border-red-300">
+                <h3 class="text-2xl font-bold text-red-600 mb-3 flex items-center gap-2">
+                    <span>📖</span> 錯題小筆記（複習專區）
+                </h3>
+                <p class="text-gray-500 mb-4 text-sm">這裡記錄了你剛剛答錯的題目，多複習幾次，下次一定進步！</p>
+                <div id="notebook-empty" class="hidden text-center py-8 text-gray-400 font-bold text-lg">
+                    ✨ 太棒了！全部都答對，你是成語小達人！
+                </div>
+                <div id="notebook-list" class="space-y-4"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center text-gray-400 text-sm mt-8">
+        <p>© 國小三年級成語自主學習系統 ‧ 配合台灣課程設計</p>
+    </footer>
+
+    <!-- 音效 -->
+    <script>
+        let isMuted = false;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            if (type === 'correct') {
+                const now = audioCtx.currentTime;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(659.25, now);
+                gain.gain.setValueAtTime(0.3, now);
+                osc.frequency.setValueAtTime(880.00, now + 0.12);
+                gain.gain.setValueAtTime(0.3, now + 0.12);
+                osc.start(now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.stop(now + 0.5);
+            } else {
+                const now = audioCtx.currentTime;
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+        }
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+        }
+    </script>
+
+    <!-- 遊戲邏輯 -->
+    <script>
+        let currentFontSize = 20;
+        function changeFontSize(delta) {
+            currentFontSize = Math.max(14, Math.min(32, currentFontSize + delta));
+            applyFontSize();
+            const labels = ['極小','小','小','中','中','中','大','大','很大','很大','特大'];
+            const step = Math.round((currentFontSize - 14) / 2);
+            document.getElementById('fontSizeDisplay').innerText = labels[Math.min(step, labels.length - 1)];
+        }
+        function applyFontSize() {
+            const qt = document.getElementById('question-text');
+            if (qt) qt.style.fontSize = `${currentFontSize + 2}px`;
+            document.querySelectorAll('.option-btn').forEach(b => b.style.fontSize = `${currentFontSize}px`);
+            const ie = document.getElementById('idiom-explanation');
+            if (ie) ie.style.fontSize = `${currentFontSize}px`;
+            document.querySelectorAll('.notebook-item-text').forEach(el => el.style.fontSize = `${currentFontSize}px`);
+        }
+
+        /* ── 20 題資料庫（全新情境，句子較短） ── */
+        const idiomsData = [
+            {
+                idiom: "耳提面命",
+                pronunciation: "ㄦˇ ㄊㄧˊ ㄇㄧㄢˋ ㄇㄧㄥˋ",
+                explanation: "比喻熱切、叮嚀地教導。",
+                example: "老師每天早自習都耳提面命，叮嚀我們要認真複習生字。",
+                sentence: "出門前，媽媽{BLANK}地提醒我：「要帶水壺、不能亂跑、準時回家！」"
+            },
+            {
+                idiom: "手足無措",
+                pronunciation: "ㄕㄡˇ ㄗㄨˊ ㄨˊ ㄘㄨㄛˋ",
+                explanation: "形容慌張害怕、不知該如何是好。",
+                example: "被老師突然點名背課文，小明急得手足無措。",
+                sentence: "小華發現聯絡簿沒帶，又忘了功課放哪裡，急得{BLANK}，不知道先做什麼才好。"
+            },
+            {
+                idiom: "抱薪救火",
+                pronunciation: "ㄅㄠˋ ㄒㄧㄣ ㄐㄧㄡˋ ㄏㄨㄛˇ",
+                explanation: "比喻用錯誤的方法解決問題，反而讓情況更糟。",
+                example: "用謊言掩蓋謊言，就像抱薪救火，只會越來越麻煩。",
+                sentence: "小強說謊沒寫功課，又用更多謊話蒙混，這種做法根本是{BLANK}，結果被老師和媽媽一起罰站。"
+            },
+            {
+                idiom: "明察秋毫",
+                pronunciation: "ㄇㄧㄥˊ ㄔㄚˊ ㄑㄧㄡ ㄏㄠˊ",
+                explanation: "比喻眼光敏銳，能看出極細微的地方。",
+                example: "老師明察秋毫，一眼就看出有人作業是抄來的。",
+                sentence: "陳老師{BLANK}，全班有人偷偷傳紙條，她站在講台上一眼就看穿了。"
+            },
+            {
+                idiom: "匹夫之勇",
+                pronunciation: "ㄆㄧˇ ㄈㄨ ㄓ ㄩㄥˇ",
+                explanation: "只有一時的衝動，沒有頭腦與計畫。",
+                example: "遇到糾紛，只靠匹夫之勇大聲吼叫，根本解決不了問題。",
+                sentence: "阿豪一生氣就想動手，班長說：「這只是{BLANK}，用說的才能解決問題。」"
+            },
+            {
+                idiom: "以德報怨",
+                pronunciation: "ㄧˇ ㄉㄜˊ ㄅㄠˋ ㄩㄢˋ",
+                explanation: "不計較冤仇，反而用善意回報對方。",
+                example: "同學以前說過我壞話，但他忘記帶便當時，我還是分給他吃，這就是以德報怨。",
+                sentence: "小玲雖然被阿梅嘲笑過，但看到阿梅跌倒，她還是立刻跑去扶她，真是{BLANK}。"
+            },
+            {
+                idiom: "精益求精",
+                pronunciation: "ㄐㄧㄥ ㄧˋ ㄑㄧㄡˊ ㄐㄧㄥ",
+                explanation: "已經很好了，還想要做得更好。",
+                example: "小真的字在班上已經最漂亮，但她每天還是跟著字帖練習，就是要精益求精。",
+                sentence: "小芸的直笛在全班吹得最好，但她回家仍然每天練習，一心想要{BLANK}。"
+            },
+            {
+                idiom: "民不聊生",
+                pronunciation: "ㄇㄧㄣˊ ㄅㄨˋ ㄌㄧㄠˊ ㄕㄥ",
+                explanation: "形容老百姓生活非常困苦，過不下去。",
+                example: "故事裡的壞國王加重稅收，弄得全國民不聊生，百姓吃不飽飯。",
+                sentence: "國語課文裡的壞官員貪污又加稅，讓全村人{BLANK}，只能靠野菜度日。"
+            },
+            {
+                idiom: "虎視眈眈",
+                pronunciation: "ㄏㄨˇ ㄕˋ ㄉㄢ ㄉㄢ",
+                explanation: "用貪婪的眼神盯著，等待機會搶奪。",
+                example: "小花把新卡牌放桌上，旁邊幾個同學虎視眈眈，都想換到手。",
+                sentence: "阿翔便當裡有炸雞腿，同桌的小傑一直{BLANK}地盯著，希望能討到一塊。"
+            },
+            {
+                idiom: "義憤填膺",
+                pronunciation: "ㄧˋ ㄈㄣˋ ㄊㄧㄢˊ ㄧㄥ",
+                explanation: "心中充滿因為正義感而激起的強烈憤怒。",
+                example: "有人在公園虐待流浪貓，全班看到新聞後義憤填膺，決定寫信給里長。",
+                sentence: "社會課影片播出有人偷砍老樹，全班同學都{BLANK}，紛紛舉手要寫抗議信。"
+            },
+            {
+                idiom: "理直氣壯",
+                pronunciation: "ㄌㄧˇ ㄓˊ ㄑㄧˋ ㄓㄨㄤˋ",
+                explanation: "道理充分、站得住腳，說話因此非常有底氣。",
+                example: "這枝筆本來就是你的，可以理直氣壯地跟他要回來。",
+                sentence: "值日生名單上寫得清清楚楚，班長{BLANK}地拿給阿宏看：「今天就是你掃地。」"
+            },
+            {
+                idiom: "逃之夭夭",
+                pronunciation: "ㄊㄠˊ ㄓ ㄧㄠ ㄧㄠ",
+                explanation: "形容逃跑得很快，溜之大吉。",
+                example: "打翻牛奶的小貓一聽到腳步聲，立刻逃之夭夭，躲到床底下。",
+                sentence: "打掃時間，幾個偷懶的同學一聽到老師的腳步聲，馬上{BLANK}，躲進廁所去了。"
+            },
+            {
+                idiom: "老成持重",
+                pronunciation: "ㄌㄠˇ ㄔㄥˊ ㄔˊ ㄓㄨㄥˋ",
+                explanation: "形容做事穩重、成熟，不輕浮躁動。",
+                example: "新選出的班長遇事不慌張，說話有條理，大家都說他很老成持重。",
+                sentence: "全班討論吵成一團，只有小璿冷靜地把意見寫在白板上，表現得非常{BLANK}。"
+            },
+            {
+                idiom: "口誅筆伐",
+                pronunciation: "ㄎㄡˇ ㄓㄨ ㄅㄧˇ ㄈㄚˊ",
+                explanation: "用言語和文字公開批評、譴責錯誤的行為。",
+                example: "有人在學校廁所亂塗鴉，同學們用口誅筆伐的方式，在公布欄貼文呼籲大家。",
+                sentence: "語文課議題寫作，老師要我們針對在公園亂丟垃圾的行為，用{BLANK}的方式寫一篇短文。"
+            },
+            {
+                idiom: "勢均力敵",
+                pronunciation: "ㄕˋ ㄐㄩㄣ ㄌㄧˋ ㄉㄧˊ",
+                explanation: "雙方力量相當，不分上下。",
+                example: "拔河決賽兩班勢均力敵，僵持了三分鐘都沒有分出勝負。",
+                sentence: "班際猜謎PK賽，甲班和乙班一路{BLANK}，到最後一題才分出高下。"
+            },
+            {
+                idiom: "光怪陸離",
+                pronunciation: "ㄍㄨㄤ ㄍㄨㄞˋ ㄌㄨˋ ㄌㄧˊ",
+                explanation: "形容景象奇奇怪怪，顏色和事物混雜在一起。",
+                example: "元宵節燈會上，各式花燈讓整條街呈現光怪陸離的夢幻景象。",
+                sentence: "萬聖節同樂會，教室裡有蝙蝠裝、南瓜頭、殭屍裝，呈現出{BLANK}的熱鬧景象。"
+            },
+            {
+                idiom: "初出茅廬",
+                pronunciation: "ㄔㄨ ㄔㄨ ㄇㄠˊ ㄌㄨˊ",
+                explanation: "比喻剛剛開始，經驗還不足的新手。",
+                example: "這位初出茅廬的新老師上課很用心，很快就和大家打成一片。",
+                sentence: "學校小小主播徵選，幾位{BLANK}的同學第一次站上鏡頭，緊張得手心直冒汗。"
+            },
+            {
+                idiom: "投機取巧",
+                pronunciation: "ㄊㄡˊ ㄐㄧ ㄑㄩˇ ㄑㄧㄠˇ",
+                explanation: "不認真努力，只想用小聰明或漏洞得到好處。",
+                example: "讀書不能投機取巧，靠猜答案混過考試，真正遇到難題還是不會。",
+                sentence: "跳繩比賽，小強趁計數員回頭時多報幾下，這種{BLANK}的行為讓同學都覺得他贏得不光彩。"
+            },
+            {
+                idiom: "禮尚往來",
+                pronunciation: "ㄌㄧˇ ㄕㄤˋ ㄨㄤˇ ㄌㄞˊ",
+                explanation: "對方以禮待你，你也要以禮回報，互相尊重。",
+                example: "隔壁班送來感謝卡，我們也準備了回禮，這就是禮尚往來的精神。",
+                sentence: "上次他送了你手工生日卡，現在他生日，你準備回禮是很自然的{BLANK}。"
+            },
+            {
+                idiom: "耳濡目染",
+                pronunciation: "ㄦˇ ㄖㄨˊ ㄇㄨˋ ㄖㄢˇ",
+                explanation: "長期聽到、看到，在不知不覺中受到影響。",
+                example: "爸爸是音樂家，小美從小耳濡目染，對音樂特別有感覺。",
+                sentence: "小凱的爸爸每天拉小提琴，小凱在長期{BLANK}下，還沒學樂器就能哼出許多古典旋律。"
+            }
+        ];
+
+        function getRandomOptions(correctIdiom, count = 3) {
+            const others = idiomsData.filter(i => i.idiom !== correctIdiom);
+            return others.sort(() => 0.5 - Math.random()).slice(0, count).map(i => i.idiom);
+        }
+
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctAnswersCount = 0;
+        let wrongNotes = [];
+        let answered = false;
+        let autoAdvanceTimer = null;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            score = 0;
+            currentQuestionIndex = 0;
+            correctAnswersCount = 0;
+            wrongNotes = [];
+            answered = false;
+            document.getElementById('score-display').innerText = '目前分數：0 分';
+            quizQuestions = [...idiomsData].sort(() => 0.5 - Math.random());
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            clearTimeout(autoAdvanceTimer);
+
+            /* ── 隱藏所有反饋區，確保新題目乾淨呈現 ── */
+            document.getElementById('feedback-panel').classList.add('hidden');
+            document.getElementById('auto-advance-notice').classList.add('hidden');
+
+            const currentQ = quizQuestions[currentQuestionIndex];
+
+            /* 進度 */
+            const pct = (currentQuestionIndex / quizQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            document.getElementById('question-number').innerText = `第 ${currentQuestionIndex + 1} / ${quizQuestions.length} 題`;
+
+            /* 空格 HTML */
+            const blankHTML = `<span class="inline-flex items-center mx-1 border-b-4 border-emerald-500 px-2 py-0.5 bg-yellow-50 rounded-md text-emerald-700 font-extrabold tracking-widest">（&ensp;&ensp;&ensp;&ensp;）</span>`;
+            const formattedSentence = currentQ.sentence.replace('{BLANK}', blankHTML);
+
+            const qTextEl = document.getElementById('question-text');
+            qTextEl.innerHTML = `
+                <div class="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-lg inline-block text-sm font-bold mb-3 border border-emerald-100">✏️ 請選出空格處正確的成語：</div>
+                <p class="mt-1 leading-relaxed text-gray-800" id="sentence-p">${formattedSentence}</p>
+            `;
+            qTextEl.style.fontSize = `${currentFontSize + 2}px`;
+
+            /* ── 選項：每次都重建 DOM，確保完全乾淨，無殘留樣式 ── */
+            const distractors = getRandomOptions(currentQ.idiom);
+            const options = [currentQ.idiom, ...distractors].sort(() => 0.5 - Math.random());
+            const labels = ['A', 'B', 'C', 'D'];
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = ''; /* 清空舊按鈕 */
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                /* 只用初始樣式，不帶任何前一題的狀態 */
+                btn.className = "option-btn w-full text-left bg-gray-50 hover:bg-emerald-50 border-2 border-gray-200 hover:border-emerald-400 rounded-xl p-4 flex items-center gap-4 font-bold shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-200";
+                btn.style.fontSize = `${currentFontSize}px`;
+                btn.dataset.answer = opt;
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">${labels[idx]}</span>
+                    <span class="text-gray-800">${opt}</span>
+                `;
+                btn.addEventListener('click', () => checkAnswer(opt, btn));
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedAnswer, clickedButton) {
+            if (answered) return;
+            answered = true;
+
+            const currentQ = quizQuestions[currentQuestionIndex];
+            const optionBtns = document.querySelectorAll('.option-btn');
+            optionBtns.forEach(btn => { btn.disabled = true; });
+
+            const isCorrect = (selectedAnswer === currentQ.idiom);
+
+            /* 填回完整句子 */
+            const completeHTML = `<span class="inline-flex items-center mx-1 border-b-4 border-emerald-600 px-2 py-0.5 bg-emerald-50 rounded-md text-emerald-800 font-extrabold tracking-widest">（${currentQ.idiom}）</span>`;
+            const sentenceP = document.getElementById('sentence-p');
+            if (sentenceP) sentenceP.innerHTML = currentQ.sentence.replace('{BLANK}', completeHTML);
+
+            if (isCorrect) {
+                score += 5;
+                correctAnswersCount++;
+                document.getElementById('score-display').innerText = `目前分數：${score} 分`;
+
+                clickedButton.classList.remove('bg-gray-50', 'border-gray-200', 'hover:bg-emerald-50', 'hover:border-emerald-400');
+                clickedButton.classList.add('bg-emerald-100', 'border-emerald-500', 'correct-flash');
+
+                playSound('correct');
+
+                const notice = document.getElementById('auto-advance-notice');
+                notice.classList.remove('hidden');
+                const bar = document.getElementById('auto-advance-bar-fill');
+                bar.style.animation = 'none';
+                bar.offsetHeight;
+                bar.style.animation = '';
+
+                autoAdvanceTimer = setTimeout(() => {
+                    notice.classList.add('hidden');
+                    nextQuestion();
+                }, 500);
+
+            } else {
+                clickedButton.classList.remove('bg-gray-50', 'border-gray-200');
+                clickedButton.classList.add('bg-red-100', 'border-red-400', 'shake');
+
+                optionBtns.forEach(btn => {
+                    if (btn.dataset.answer === currentQ.idiom) {
+                        btn.classList.remove('bg-gray-50', 'border-gray-200');
+                        btn.classList.add('bg-emerald-50', 'border-emerald-400');
+                    }
+                });
+
+                wrongNotes.push({
+                    idiom: currentQ.idiom,
+                    pronunciation: currentQ.pronunciation,
+                    explanation: currentQ.explanation,
+                    example: currentQ.example,
+                    sentence: currentQ.sentence,
+                    userAnswer: selectedAnswer
+                });
+
+                playSound('wrong');
+
+                const idiomExplanation = document.getElementById('idiom-explanation');
+                idiomExplanation.innerHTML = `
+                    <div class="flex flex-wrap gap-2 items-center mb-2">
+                        <span class="text-2xl font-bold text-orange-600">${currentQ.idiom}</span>
+                        <span class="text-xs text-gray-500 bg-orange-100 px-2 py-0.5 rounded-full font-bold">${currentQ.pronunciation}</span>
+                    </div>
+                    <p><strong class="text-orange-800">【成語意思】：</strong>${currentQ.explanation}</p>
+                    <p class="italic text-gray-600"><strong class="text-orange-800">【造句範例】：</strong>${currentQ.example}</p>
+                `;
+                idiomExplanation.style.fontSize = `${currentFontSize}px`;
+
+                const feedbackBox = document.getElementById('feedback-box');
+                feedbackBox.className = "rounded-xl p-5 text-white mb-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-red-500 to-orange-500 shadow-md";
+                document.getElementById('feedback-icon').innerText = '😢';
+                document.getElementById('feedback-title').innerText = '答錯了！加油，再想想！';
+                document.getElementById('correct-answer-show').innerText = `正確答案是【${currentQ.idiom}】，記下來吧！`;
+
+                document.getElementById('feedback-panel').classList.remove('hidden');
+                document.getElementById('feedback-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                showQuestion();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('correct-count').innerText = correctAnswersCount;
+            document.getElementById('final-score').innerText = `${score} 分`;
+
+            const pct = correctAnswersCount / 20;
+            let trophy = '🏆', comment = '';
+            if (pct === 1)        { trophy = '🏆🌟'; comment = '完美！全部答對，你是成語超人！'; }
+            else if (pct >= 0.85) { trophy = '🥇';   comment = '非常優秀！只差一點就滿分囉！'; }
+            else if (pct >= 0.7)  { trophy = '🥈';   comment = '表現很好！繼續加油，會更棒的！'; }
+            else if (pct >= 0.5)  { trophy = '🥉';   comment = '已經過半了，多複習一定能進步！'; }
+            else                  { trophy = '📚';   comment = '繼續練習，成語功力很快就會提升！'; }
+            document.getElementById('result-trophy').innerText = trophy;
+            document.getElementById('result-comment').innerText = `${comment}（答對 ${correctAnswersCount} / 20 題）`;
+
+            const notebookList = document.getElementById('notebook-list');
+            const notebookEmpty = document.getElementById('notebook-empty');
+            notebookList.innerHTML = '';
+
+            if (wrongNotes.length === 0) {
+                notebookEmpty.classList.remove('hidden');
+            } else {
+                notebookEmpty.classList.add('hidden');
+                wrongNotes.forEach((note, idx) => {
+                    const wrongHTML = `<span class="text-red-600 font-extrabold border-b-2 border-red-400 mx-1">（${note.userAnswer}）</span>`;
+                    const rightHTML = `<span class="text-emerald-700 font-extrabold border-b-2 border-emerald-400 mx-1">（${note.idiom}）</span>`;
+                    const wrongSentence = note.sentence.replace('{BLANK}', wrongHTML);
+                    const rightSentence = note.sentence.replace('{BLANK}', rightHTML);
+
+                    const card = document.createElement('div');
+                    card.className = "bg-red-50 rounded-xl p-5 border-l-4 border-red-400 shadow-sm space-y-2";
+                    card.innerHTML = `
+                        <div class="flex flex-wrap items-center justify-between gap-1 border-b border-red-100 pb-2">
+                            <span class="font-bold text-red-700">💡 第 ${idx + 1} 個錯誤：【${note.idiom}】</span>
+                            <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">${note.pronunciation}</span>
+                        </div>
+                        <div class="notebook-item-text space-y-1 text-gray-700">
+                            <div class="bg-white p-3 rounded border border-gray-100 leading-relaxed space-y-1 text-sm">
+                                <p><strong class="text-red-500">❌ 你選的：</strong>${wrongSentence}</p>
+                                <p><strong class="text-emerald-600">⭕ 正確的：</strong>${rightSentence}</p>
+                            </div>
+                            <p><strong class="text-red-700">【成語意思】：</strong>${note.explanation}</p>
+                            <p class="italic text-gray-600"><strong class="text-red-700">【造句參考】：</strong>${note.example}</p>
+                        </div>
+                    `;
+                    notebookList.appendChild(card);
+                });
+                applyFontSize();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function restartQuiz() { startQuiz(); }
+    </script>
+</body>
+</html>
