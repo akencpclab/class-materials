@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>字音字形小試身手 - 挑錯大作戰</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      font-family: 'PingFang TC', 'Heiti TC', 'Microsoft JhengHei', sans-serif;
+    }
+    @keyframes pop-in {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px); }
+      40% { transform: translateX(10px); }
+      60% { transform: translateX(-8px); }
+      80% { transform: translateX(8px); }
+    }
+    .anim-pop { animation: pop-in 0.4s ease forwards; }
+    .anim-shake { animation: shake 0.5s ease; }
+    .ruby-wrap { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+    .ruby-text { font-size: 0.38em; letter-spacing: 0.05em; color: #ef4444; font-weight: 600; margin-bottom: 2px; }
+    .ruby-char { line-height: 1; }
+    .next-btn {
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .next-btn:active { transform: scale(0.96); }
+    @keyframes star-fall {
+      0%   { transform: translateY(-60px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(60px) rotate(720deg); opacity: 0; }
+    }
+    .star { position: absolute; font-size: 1.8rem; animation: star-fall 0.9s ease forwards; pointer-events: none; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, Fragment } = React;
+
+    // ── SVG Icons ──────────────────────────────────────────────────
+    const IconBookOpen = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+    const IconPlay     = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+    const IconTrophy   = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
+    const IconRefresh  = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>;
+    const IconCheck    = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+    const IconX        = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>;
+    const IconArrow    = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+    const IconTarget   = ({ size=24,className="" }) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+
+    // ── 注音資料 ───────────────────────────────────────────────────
+    // 形近字：每個字的注音
+    const CHAR_ZHUYIN = {
+      "魚":"ㄩˊ","漁":"ㄩˊ","天":"ㄊㄧㄢ","夫":"ㄈㄨ","婦":"ㄈㄨˋ","掃":"ㄙㄠˇ",
+      "永":"ㄩㄥˇ","求":"ㄑㄧㄡˊ","恩":"ㄣ","思":"ㄙ","盆":"ㄆㄣˊ","盒":"ㄏㄜˊ",
+      "值":"ㄓˊ","直":"ㄓˊ","聊":"ㄌㄧㄠˊ","聯":"ㄌㄧㄢˊ","破":"ㄆㄛˋ","坡":"ㄆㄛ",
+      "柳":"ㄌㄧㄡˇ","仰":"ㄧㄤˇ","迎":"ㄧㄥˊ","姑":"ㄍㄨ","菇":"ㄍㄨ","估":"ㄍㄨ",
+      "扒":"ㄅㄚ","趴":"ㄆㄚ","例":"ㄌㄧˋ","列":"ㄌㄧㄝˋ","烈":"ㄌㄧㄝˋ",
+      "岸":"ㄢˋ","岩":"ㄧㄢˊ","澗":"ㄐㄧㄢˋ","潤":"ㄖㄨㄣˋ","豪":"ㄏㄠˊ","毫":"ㄏㄠˊ",
+      "徒":"ㄊㄨˊ","陡":"ㄉㄡˇ","徙":"ㄒㄧˇ","措":"ㄘㄨㄛˋ","錯":"ㄘㄨㄛˋ","惜":"ㄒㄧˊ",
+      "編":"ㄅㄧㄢ","蝙":"ㄅㄧㄢ","遍":"ㄅㄧㄢˋ","騙":"ㄆㄧㄢˋ",
+      "柏":"ㄅㄛˊ","伯":"ㄅㄛˊ","泊":"ㄅㄛˊ","迫":"ㄆㄛˋ",
+      "搖":"ㄧㄠˊ","謠":"ㄧㄠˊ","遙":"ㄧㄠˊ","提":"ㄊㄧˊ","堤":"ㄉㄧ","題":"ㄊㄧˊ",
+      "萬":"ㄨㄢˋ","厲":"ㄌㄧˋ","遭":"ㄗㄠ","糟":"ㄗㄠ",
+      "撲":"ㄆㄨ","僕":"ㄆㄨˊ","樸":"ㄆㄨˊ","理":"ㄌㄧˇ","埋":"ㄇㄞˊ",
+      "虎":"ㄏㄨˇ","虔":"ㄑㄧㄢˊ","損":"ㄙㄨㄣˇ","捐":"ㄐㄩㄢ",
+      "逃":"ㄊㄠˊ","桃":"ㄊㄠˊ","槍":"ㄑㄧㄤ","搶":"ㄑㄧㄤˇ",
+      "幕":"ㄇㄨˋ","慕":"ㄇㄨˋ","墓":"ㄇㄨˋ","募":"ㄇㄨˋ",
+      "灣":"ㄨㄢ","彎":"ㄨㄢ","肺":"ㄈㄟˋ","柿":"ㄕˋ","沛":"ㄆㄟˋ",
+      "液":"ㄧㄝˋ","夜":"ㄧㄝˋ","持":"ㄔˊ","特":"ㄊㄜˋ","待":"ㄉㄞˋ",
+      "代":"ㄉㄞˋ","伐":"ㄈㄚˊ","敵":"ㄉㄧˊ","滴":"ㄉㄧ","適":"ㄕˋ",
+      "取":"ㄑㄩˇ","娶":"ㄑㄩˇ","抬":"ㄊㄞˊ","拾":"ㄕˊ",
+      "重":"ㄓㄨㄥˋ","童":"ㄊㄨㄥˊ","梢":"ㄕㄠ","稍":"ㄕㄠ","捎":"ㄕㄠ","悄":"ㄑㄧㄠˇ",
+      "掌":"ㄓㄤˇ","裳":"ㄔㄤˊ","洞":"ㄉㄨㄥˋ","桐":"ㄊㄨㄥˊ","銅":"ㄊㄨㄥˊ","筒":"ㄊㄨㄥˊ",
+      "鋪":"ㄆㄨ","捕":"ㄅㄨˇ","辦":"ㄅㄢˋ","瓣":"ㄅㄢˋ","辨":"ㄅㄧㄢˋ","辯":"ㄅㄧㄢˋ","辮":"ㄅㄧㄢˋ"
+    };
+
+    // ── 題庫 ─────────────────────────────────────────────────────
+    const QUESTION_DATA = [
+      { type:"形近字", sentence:"這隻鯨{typo}是海洋中最大的哺乳動物。", typo:"漁", options:["魚","漁"], answer:"魚" },
+      { type:"形近字", sentence:"他們是一對恩愛的妻{typo}。", typo:"天", options:["天","夫"], answer:"夫" },
+      { type:"形近字", sentence:"過年前，全家人一起大{typo}除。", typo:"婦", options:["婦","掃"], answer:"掃" },
+      { type:"形近字", sentence:"遇到困難時，要主動尋{typo}幫助。", typo:"永", options:["永","求"], answer:"求" },
+      { type:"形近字", sentence:"做人要懂得感{typo}圖報。", typo:"思", options:["恩","思"], answer:"恩" },
+      { type:"形近字", sentence:"這是一個包裝精美的禮{typo}。", typo:"盆", options:["盆","盒"], answer:"盒" },
+      { type:"形近字", sentence:"他是一個性格正{typo}的好班長。", typo:"值", options:["值","直"], answer:"直" },
+      { type:"形近字", sentence:"過年時，家家戶戶都會貼春{typo}。", typo:"聊", options:["聊","聯"], answer:"聯" },
+      { type:"形近字", sentence:"這條山{typo}非常陡峭，爬起來很費力。", typo:"破", options:["破","坡"], answer:"坡" },
+      { type:"形近字", sentence:"大家{typo}著頭，看著天空中的美麗風箏。", typo:"柳", options:["柳","仰","迎"], answer:"仰" },
+      { type:"形近字", sentence:"這道火鍋裡加了我最愛吃的金針{typo}。", typo:"姑", options:["菇","估","姑"], answer:"菇" },
+      { type:"形近字", sentence:"小狗{typo}在地上，安靜地睡著了。", typo:"扒", options:["趴","扒"], answer:"趴" },
+      { type:"形近字", sentence:"夏天的陽光非常強{typo}，出門要注意防曬。", typo:"例", options:["列","烈","例"], answer:"烈" },
+      { type:"形近字", sentence:"他非常喜歡極限運動，尤其是攀{typo}。", typo:"岸", options:["岩","岸"], answer:"岩" },
+      { type:"形近字", sentence:"這位歌唱家的嗓音非常圓{typo}動聽。", typo:"澗", options:["潤","澗"], answer:"潤" },
+      { type:"形近字", sentence:"他對這件意外的發生{typo}不知情。", typo:"豪", options:["毫","豪"], answer:"毫" },
+      { type:"形近字", sentence:"候鳥每年冬天都會進行長途遷{typo}。", typo:"徒", options:["陡","徒","徙"], answer:"徙" },
+      { type:"形近字", sentence:"我們應該要珍{typo}現在擁有的水資源。", typo:"措", options:["措","錯","惜"], answer:"惜" },
+      { type:"形近字", sentence:"這是一個{typo}人的陷阱，千萬別上當。", typo:"編", options:["編","蝙","遍","騙"], answer:"騙" },
+      { type:"形近字", sentence:"夜晚，許多漁船停{typo}在安靜的港口。", typo:"柏", options:["伯","泊","柏","迫"], answer:"泊" },
+      { type:"形近字", sentence:"媽媽唱著溫馨的童{typo}哄寶寶睡覺。", typo:"搖", options:["謠","搖","遙"], answer:"謠" },
+      { type:"形近字", sentence:"這次期末考的試{typo}有一點難。", typo:"提", options:["提","堤","題"], answer:"題" },
+      { type:"形近字", sentence:"教練對選手的訓練要求非常嚴{typo}。", typo:"萬", options:["萬","厲"], answer:"厲" },
+      { type:"形近字", sentence:"他的腳踏車被偷了，真是{typo}糕。", typo:"遭", options:["糟","遭"], answer:"糟" },
+      { type:"形近字", sentence:"鄉下的人們保有{typo}實善良的性格。", typo:"僕", options:["撲","僕","樸"], answer:"樸" },
+      { type:"形近字", sentence:"貓咪上完廁所後，會把排泄物{typo}進沙子裡。", typo:"理", options:["理","埋"], answer:"埋" },
+      { type:"形近字", sentence:"奶奶每天早上都會{typo}誠地祈求家人平安。", typo:"虎", options:["虎","虔"], answer:"虔" },
+      { type:"形近字", sentence:"他把存下來的零用錢{typo}給了育幼院。", typo:"損", options:["損","捐"], answer:"捐" },
+      { type:"形近字", sentence:"春天到了，粉紅色的{typo}花開得好美。", typo:"逃", options:["逃","桃"], answer:"桃" },
+      { type:"形近字", sentence:"警察英勇地將{typo}匪逮捕歸案。", typo:"槍", options:["槍","搶"], answer:"搶" },
+      { type:"形近字", sentence:"精彩的表演結束了，舞台緩緩落{typo}。", typo:"慕", options:["幕","慕","墓","募"], answer:"幕" },
+      { type:"形近字", sentence:"這條山路非常{typo}曲，開車要小心。", typo:"灣", options:["灣","彎"], answer:"彎" },
+      { type:"形近字", sentence:"熱帶雨林的降雨量非常豐{typo}。", typo:"肺", options:["肺","柿","沛"], answer:"沛" },
+      { type:"形近字", sentence:"護理師細心地幫病人打點滴輸{typo}。", typo:"夜", options:["液","夜"], answer:"液" },
+      { type:"形近字", sentence:"請大家在候車區耐心等{typo}。", typo:"持", options:["持","特","待"], answer:"待" },
+      { type:"形近字", sentence:"隨意砍{typo}森林樹木會嚴重破壞生態環境。", typo:"代", options:["伐","代"], answer:"伐" },
+      { type:"形近字", sentence:"這個溫和的氣候讓人感覺很{typo}宜。", typo:"敵", options:["敵","滴","適"], answer:"適" },
+      { type:"形近字", sentence:"哥哥下個月就要{typo}新娘，完成終身大事了。", typo:"取", options:["取","娶"], answer:"娶" },
+      { type:"形近字", sentence:"請大家把掉在地上的垃圾撿{typo}起來。", typo:"抬", options:["抬","拾"], answer:"拾" },
+      { type:"形近字", sentence:"睡前，媽媽總會說一篇{typo}話故事給我聽。", typo:"重", options:["童","重"], answer:"童" },
+      { type:"形近字", sentence:"為了不吵醒妹妹，他{typo}聲地離開了房間。", typo:"梢", options:["梢","稍","捎","悄"], answer:"悄" },
+      { type:"形近字", sentence:"妹妹今天穿著一件非常漂亮的新衣{typo}。", typo:"掌", options:["掌","裳"], answer:"裳" },
+      { type:"形近字", sentence:"書桌上有一個裝滿彩色筆的筆{typo}。", typo:"洞", options:["桐","銅","洞","筒"], answer:"筒" },
+      { type:"形近字", sentence:"蜘蛛會在角落結網，用來{typo}捉飛行的昆蟲。", typo:"鋪", options:["鋪","捕"], answer:"捕" },
+      { type:"形近字", sentence:"小女孩綁著兩條長長的髮{typo}，非常可愛。", typo:"辦", options:["瓣","辦","辨","辯","辮"], answer:"辮" },
+
+      { type:"多音字", note:"【暴】", sentence:"氣象報告說，這場風暴（{typo}）非常可怕。", typo:"ㄆㄨˋ", options:["ㄅㄠˋ","ㄆㄨˋ"], answer:"ㄅㄠˋ" },
+      { type:"多音字", note:"【質】", sentence:"警察成功解救了被歹徒挾持的人質（{typo}）。", typo:"ㄓˊ", options:["ㄓˊ","ㄓˋ"], answer:"ㄓˋ" },
+      { type:"多音字", note:"【龜】", sentence:"因為長期乾旱，田裡的土地都龜（{typo}）裂了。", typo:"ㄍㄨㄟ", options:["ㄍㄨㄟ","ㄐㄩㄣ"], answer:"ㄐㄩㄣ" },
+      { type:"多音字", note:"【縫】", sentence:"奶奶戴上老花眼鏡，幫我縫（{typo}）補破洞的襪子。", typo:"ㄈㄥˋ", options:["ㄈㄥˋ","ㄈㄥˊ"], answer:"ㄈㄥˊ" },
+      { type:"多音字", note:"【鋪】", sentence:"去露營的時候，我很喜歡睡在地鋪（{typo}）上。", typo:"ㄆㄨ", options:["ㄆㄨ","ㄆㄨˋ"], answer:"ㄆㄨˋ" }
+    ];
+
+    // ── 音效（Web Audio API） ────────────────────────────────────
+    function playCorrect(ctx) {
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = "sine";
+        gain.gain.setValueAtTime(0, t + i*0.08);
+        gain.gain.linearRampToValueAtTime(0.35, t + i*0.08 + 0.04);
+        gain.gain.linearRampToValueAtTime(0, t + i*0.08 + 0.18);
+        osc.start(t + i*0.08);
+        osc.stop(t + i*0.08 + 0.2);
+      });
+    }
+
+    function playWrong(ctx) {
+      const t = ctx.currentTime;
+      [220, 196].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = "sawtooth";
+        gain.gain.setValueAtTime(0, t + i*0.22);
+        gain.gain.linearRampToValueAtTime(0.3, t + i*0.22 + 0.05);
+        gain.gain.linearRampToValueAtTime(0, t + i*0.22 + 0.22);
+        osc.start(t + i*0.22);
+        osc.stop(t + i*0.22 + 0.25);
+      });
+    }
+
+    // ── 工具函式 ─────────────────────────────────────────────────
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+    // 顯示字 + 注音的 Ruby 元件（形近字用）
+    function CharWithZhuyin({ char, highlight = false }) {
+      const zh = CHAR_ZHUYIN[char];
+      return (
+        <span className="ruby-wrap mx-0.5">
+          {zh && <span className="ruby-text">{zh}</span>}
+          <span className={`ruby-char ${highlight ? "text-red-500 font-bold" : "text-slate-700"}`}>{char}</span>
+        </span>
+      );
+    }
+
+    // ── 星星動畫 ─────────────────────────────────────────────────
+    function StarBurst({ active }) {
+      if (!active) return null;
+      const stars = ["⭐","🌟","✨","💫","🎉","🎊"];
+      return (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center">
+          {[...Array(8)].map((_,i) => (
+            <span key={i} className="star" style={{
+              left: `${10 + Math.random()*80}%`,
+              top: `${10 + Math.random()*60}%`,
+              animationDelay: `${Math.random()*0.3}s`
+            }}>
+              {stars[i % stars.length]}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // ── 主 App ──────────────────────────────────────────────────
+    function App() {
+      const [gameState, setGameState] = useState('start'); // start | playing | end
+      const [questions, setQuestions]     = useState([]);
+      const [currentQIndex, setCurrentQIndex] = useState(0);
+      const [score, setScore]             = useState(0);
+      const [wrongList, setWrongList]     = useState([]); // 錯誤題目記錄
+      const [feedback, setFeedback]       = useState(null); // null | 'correct' | 'wrong'
+      const [selectedOption, setSelectedOption] = useState(null);
+      const [showStars, setShowStars]     = useState(false);
+      const [shakeKey, setShakeKey]       = useState(0);
+      const [reviewMode, setReviewMode]   = useState(false);
+      const audioCtxRef = useRef(null);
+
+      const getCtx = () => {
+        if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtxRef.current;
+      };
+
+      const startGame = (fromWrong = false) => {
+        const pool = fromWrong ? wrongList : shuffle(QUESTION_DATA);
+        setQuestions(pool);
+        setCurrentQIndex(0);
+        setScore(0);
+        setWrongList([]);
+        setFeedback(null);
+        setSelectedOption(null);
+        setShowStars(false);
+        setReviewMode(fromWrong);
+        setGameState('playing');
+      };
+
+      const handleAnswer = (option) => {
+        if (feedback) return;
+        setSelectedOption(option);
+        const q = questions[currentQIndex];
+        const isCorrect = option === q.answer;
+        setFeedback(isCorrect ? 'correct' : 'wrong');
+
+        const ctx = getCtx();
+        if (isCorrect) {
+          playCorrect(ctx);
+          setShowStars(true);
+          setTimeout(() => setShowStars(false), 1000);
+        } else {
+          playWrong(ctx);
+          setShakeKey(k => k + 1);
+          setWrongList(prev => {
+            if (prev.find(p => p.sentence === q.sentence)) return prev;
+            return [...prev, q];
+          });
+        }
+      };
+
+      const handleNext = () => {
+        if (currentQIndex < questions.length - 1) {
+          setCurrentQIndex(prev => prev + 1);
+          setFeedback(null);
+          setSelectedOption(null);
+          setShowStars(false);
+        } else {
+          setGameState('end');
+        }
+      };
+
+      // ── 開始畫面 ─────────────────────────────────────────────
+      if (gameState === 'start') {
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6">
+            <div className="bg-white p-10 rounded-3xl shadow-xl max-w-2xl w-full text-center space-y-8">
+              <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600">
+                <IconBookOpen size={48} />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-slate-800 tracking-wider">字音字形挑錯挑戰</h1>
+              <p className="text-xl text-slate-500 leading-relaxed">
+                紅色的字（或注音）寫錯了！<br/>
+                請在下方選出正確的字（或注音）來幫它糾錯吧！
+              </p>
+              <button
+                onClick={() => startGame(false)}
+                className="bg-red-500 hover:bg-red-600 text-white text-2xl font-bold py-5 px-12 rounded-full shadow-lg transition-transform transform active:scale-95 flex items-center justify-center mx-auto"
+              >
+                <IconPlay className="mr-3" size={32} /> 開始除錯
+              </button>
+              <p className="text-slate-400">共 {QUESTION_DATA.length} 題</p>
+            </div>
+          </div>
+        );
+      }
+
+      // ── 結束畫面 ─────────────────────────────────────────────
+      if (gameState === 'end') {
+        const total = questions.length;
+        const pct = Math.round((score / total) * 100);
+        let message = "神乎其技！你是除錯大師！🏆";
+        if (pct < 60)  message = "再接再厲，多練習就會更棒！💪";
+        else if (pct < 90) message = "非常優秀！大部分的錯字都被你揪出來了！🎉";
+
+        return (
+          <div className="min-h-screen flex flex-col items-center justify-center p-6">
+            <div className="bg-white p-10 rounded-3xl shadow-xl max-w-3xl w-full text-center space-y-8">
+              <div className="w-32 h-32 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-500">
+                <IconTrophy size={64} />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-800">{message}</h1>
+              <div className="text-2xl text-slate-600">
+                正確題數：<span className="text-5xl font-bold text-red-500 mx-2">{score}</span> / {total}
+              </div>
+
+              {/* 錯誤統計 */}
+              {wrongList.length > 0 && (
+                <div className="text-left bg-red-50 rounded-2xl p-6 space-y-4">
+                  <h2 className="text-2xl font-bold text-red-600 flex items-center gap-2">
+                    <IconTarget size={26}/> 需要加強的題目（共 {wrongList.length} 題）
+                  </h2>
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+                    {wrongList.map((q, i) => (
+                      <div key={i} className="bg-white rounded-xl p-4 border border-red-200 shadow-sm">
+                        <span className="text-xs font-bold text-white bg-red-400 px-2 py-0.5 rounded-full mr-2">{q.type}</span>
+                        {q.note && <span className="text-sm font-bold text-red-500 mr-2">{q.note}</span>}
+                        <span className="text-lg text-slate-700">
+                          {q.sentence.split('{typo}').map((part, j, arr) => (
+                            <Fragment key={j}>
+                              {part}
+                              {j < arr.length - 1 && (
+                                <span className="text-green-600 font-bold underline mx-0.5">{q.answer}</span>
+                              )}
+                            </Fragment>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => startGame(true)}
+                    className="mt-4 w-full bg-orange-500 hover:bg-orange-600 text-white text-xl font-bold py-4 rounded-2xl shadow transition-transform active:scale-95 flex items-center justify-center gap-3"
+                  >
+                    <IconTarget size={28} /> 再練習錯誤題目
+                  </button>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => startGame(false)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <IconRefresh size={28} /> 全部重新挑戰
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ── 遊戲畫面 ─────────────────────────────────────────────
+      const q = questions[currentQIndex];
+      const isFormNear = q.type === "形近字";
+
+      return (
+        <div className="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+          {/* 頂部進度 */}
+          <div className="w-full max-w-4xl flex justify-between items-center mb-4 bg-white p-4 rounded-2xl shadow-sm">
+            <div className="text-xl font-bold text-slate-500">
+              第 <span className="text-red-500 text-3xl mx-1">{currentQIndex + 1}</span> / {questions.length} 題
+              {reviewMode && <span className="ml-2 text-sm text-orange-500 font-bold">（錯誤複習模式）</span>}
+            </div>
+            <div className="text-xl font-bold text-slate-500 bg-red-50 px-4 py-2 rounded-xl">
+              除錯分 <span className="text-red-500 text-2xl ml-1">{score}</span>
+            </div>
+          </div>
+
+          {/* 進度條 */}
+          <div className="w-full max-w-4xl bg-slate-200 rounded-full h-3 mb-8 overflow-hidden">
+            <div
+              className="bg-red-500 h-3 rounded-full transition-all duration-300"
+              style={{ width:`${(currentQIndex / questions.length) * 100}%` }}
+            />
+          </div>
+
+          {/* 題目卡 */}
+          <div className="w-full max-w-4xl bg-white p-8 md:p-12 rounded-3xl shadow-lg mb-6 relative overflow-hidden">
+            <StarBurst active={showStars} />
+            <div className="absolute -top-5 left-8 bg-red-500 text-white px-6 py-2 rounded-full font-bold text-xl shadow-md border-2 border-white">
+              {q.type}糾錯
+            </div>
+            <div className="mt-6 min-h-[160px] flex flex-col justify-center">
+              {q.note && <div className="text-2xl font-bold text-red-500 mb-4">{q.note}</div>}
+              <div
+                key={shakeKey}
+                className={`text-3xl md:text-5xl font-medium text-slate-800 leading-relaxed md:leading-normal ${feedback === 'wrong' ? 'anim-shake' : ''}`}
+              >
+                {q.sentence.split('{typo}').map((part, idx, arr) => (
+                  <Fragment key={idx}>
+                    {part}
+                    {idx < arr.length - 1 && (
+                      <span className={`
+                        inline-block mx-1 px-2 rounded font-bold transition-all duration-300
+                        ${feedback === 'correct'
+                          ? 'bg-green-100 text-green-600 underline decoration-solid decoration-4 anim-pop'
+                          : feedback === 'wrong'
+                            ? 'bg-red-200 text-red-700 line-through decoration-solid decoration-4'
+                            : 'bg-red-50 text-red-500 underline decoration-wavy decoration-red-400 decoration-3'
+                        }
+                      `}>
+                        {feedback === 'correct' ? q.answer : q.typo}
+                      </span>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 選項區 */}
+          <div
+            className="w-full max-w-4xl grid gap-5 mb-6"
+            style={{ gridTemplateColumns:`repeat(auto-fit, minmax(140px, 1fr))` }}
+          >
+            {q.options.map((option, idx) => {
+              let btnClass = "bg-white border-4 border-slate-200 text-slate-700 hover:border-red-400 hover:bg-red-50";
+              let icon = null;
+              let extraClass = "";
+
+              if (feedback) {
+                if (option === q.answer) {
+                  btnClass = "bg-green-100 border-4 border-green-500 text-green-700";
+                  icon = <IconCheck className="absolute top-3 right-3 text-green-500" size={28}/>;
+                  extraClass = "anim-pop";
+                } else if (option === selectedOption) {
+                  btnClass = "bg-red-100 border-4 border-red-500 text-red-700 opacity-70";
+                  icon = <IconX className="absolute top-3 right-3 text-red-500" size={28}/>;
+                } else {
+                  btnClass = "bg-slate-50 border-4 border-slate-200 text-slate-400 opacity-40";
+                }
+              }
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswer(option)}
+                  disabled={!!feedback}
+                  className={`relative rounded-3xl p-6 md:p-10 shadow-sm transition-all duration-200 transform active:scale-95 flex flex-col items-center justify-center gap-1 min-h-[110px] ${btnClass} ${extraClass}`}
+                >
+                  {/* 答題後顯示注音 */}
+                  {feedback && isFormNear && (
+                    <span className="text-sm font-bold text-red-400 tracking-wider">{CHAR_ZHUYIN[option] || ""}</span>
+                  )}
+                  <span className="text-4xl md:text-6xl font-bold">{option}</span>
+                  {icon}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 回饋 + 下一題 */}
+          <div className="w-full max-w-4xl flex flex-col items-center gap-4">
+            {feedback === 'correct' && (
+              <div className="text-2xl md:text-3xl font-bold text-green-500 animate-bounce text-center">
+                🎉 太厲害了！成功改正錯別字！
+              </div>
+            )}
+            {feedback === 'wrong' && (
+              <div className="text-xl md:text-2xl font-bold text-red-500 animate-pulse text-center">
+                ❌ 答錯囉！正確的是「<span className="text-green-600 text-3xl font-bold underline mx-1">{q.answer}</span>」喔！
+              </div>
+            )}
+
+            {feedback && (
+              <button
+                onClick={handleNext}
+                className="next-btn mt-2 bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white text-2xl font-bold py-4 px-16 rounded-full shadow-lg flex items-center justify-center gap-3"
+              >
+                {currentQIndex < questions.length - 1 ? (
+                  <><IconArrow size={28}/> 下一題</>
+                ) : (
+                  <><IconTrophy size={28}/> 查看結果</>
+                )}
+              </button>
+            )}
+          </div>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
