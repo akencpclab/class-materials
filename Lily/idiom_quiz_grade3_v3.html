@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成語寶可夢闖關王 - 高級洛托姆圖鑑版</title>
+  <style>
+    :root {
+      --bg1: #fefaf0;
+      --bg2: #f0f9ff;
+      --card-p: rgba(255, 255, 255, 0.95); /* Paper color */
+      --card-d: #ff3c3c; /* Rotom red */
+      --text: #2c3e50;
+      --muted: #7f8c8d;
+      --primary: #ff6b81;
+      --primary2: #54a0ff;
+      --good: #2ecc71;
+      --bad: #e74c3c;
+      --border-p: #ecf0f1;
+      --border-d: #c0392b; /* Darker red */
+      --shadow-p: 0 10px 20px rgba(0,0,0,0.05); /* Soft paper shadow */
+      --shadow-d: 0 15px 30px rgba(192, 57, 43, 0.3); /* Strong Rotom shadow */
+      --radius-p: 18px; /* Softer paper corners */
+      --radius-d: 30px; /* Rotom phone corners */
+      --font-size: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Pro TC", "Noto Sans TC", "MicroSoft JhengHei", sans-serif;
+      color: var(--text);
+      font-size: var(--font-size);
+      background:
+        radial-gradient(circle at 10% 10%, #fff3d0 0, transparent 30%),
+        radial-gradient(circle at 90% 10%, #dff4ff 0, transparent 30%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    /* Hero section: Control panel and Dex */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+    /* Paper panels for info and notes */
+    .panel-paper {
+      background: var(--card-p);
+      border: 1px solid var(--border-p);
+      border-radius: var(--radius-p);
+      box-shadow: var(--shadow-p);
+      padding: 25px;
+      backdrop-filter: blur(5px);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel-paper::before { /* Paper texture */
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHZpZXdCb3g9IjAgMCA0IDQiPjxnIGZpbGwtcm9kZT0iZXZlbm9kZCI+PGcgZmlsbD0iI2YwZjBmMCIgZmlsbC1vcGFjaXR5PSIwLjQiPjxwYXRoIGQ9Ik0wIDBoMnYySDBWMHptMiAyaDJ2MkgydjJ6Ii8+PC9nPjwvZz48L3N2Zz4=');
+      opacity: 0.5;
+      z-index: -1;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2.2rem;
+      color: #333;
+      letter-spacing: -1px;
+    }
+    .sub {
+      color: var(--muted);
+      margin-bottom: 20px;
+      max-width: 600px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 15px;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+    button:active { transform: translateY(1px) scale(0.98); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), #ff9f80); color: white; }
+    .btn-blue { background: linear-gradient(135deg, var(--primary2), #81b9ff); color: white; }
+    .btn-ghost { background: white; border: 1px solid var(--border-p); color: var(--text); }
+    .btn-sm { padding: 9px 15px; font-size: 0.88rem; }
+
+    /* Stats on paper */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .stat {
+      background: #fbfdff;
+      border: 1px solid #e1e9f0;
+      border-radius: 14px;
+      padding: 15px;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { display: block; font-size: 1.5rem; font-weight: 800; color: #333; margin-top: 2px; }
+
+    /* --- Rotom Pokedex Style --- */
+    .panel-rotom {
+      background: var(--card-d);
+      border: 6px solid var(--border-d);
+      border-radius: var(--radius-d);
+      box-shadow: var(--shadow-d);
+      padding: 20px;
+      color: white;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    /* Top LEDs and details */
+    .rotom-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .rotom-leds { display: flex; gap: 8px; }
+    .led { width: 14px; height: 14px; border-radius: 50%; background: #96231a; border: 2px solid #66100a; }
+    .led.active-green { background: #56ff6a; box-shadow: 0 0 10px #56ff6a; border-color: #fff; animation: blink 0.5s ease 2; }
+    .led.active-red { background: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; border-color: #fff; animation: blink 0.5s ease 2; }
+    .rotom-id { font-family: "Courier New", monospace; font-weight: bold; background: #96231a; padding: 2px 8px; border-radius: 5px; font-size: 0.9rem; }
+
+    /* Main screen area */
+    .pokemon-screen {
+      width: 100%;
+      background: linear-gradient(180deg, #1d2b3a, #0a1017); /* Dark digital bg */
+      border: 4px solid #333;
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .pokemon-screen::after { /* Scanline effect */
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 2px);
+      pointer-events: none;
+    }
+    /* Loading/scanning animation line */
+    .scan-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(84, 160, 255, 0.6);
+      box-shadow: 0 0 10px #54a0ff;
+      top: -10px;
+      opacity: 0;
+    }
+    .panel-rotom.busy .scan-line {
+      animation: scan 1.2s ease-in-out infinite;
+      opacity: 1;
+    }
+
+    .pokemon-screen-chip {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #81b9ff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pokemon-screen img {
+      width: 90%;
+      max-width: 250px;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      margin: 15px auto;
+      display: block;
+      filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); /* Glow */
+      transition: opacity 0.2s ease;
+    }
+    .panel-rotom.busy .pokemon-screen img { opacity: 0.3; }
+
+    /* Type and Name info */
+    .rotom-info {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    .type-badges { display: flex; gap: 5px; }
+    .type-badge {
+      font-size: 0.75rem;
+      padding: 3px 7px;
+      border-radius: 5px;
+      font-weight: bold;
+      color: white;
+      text-transform: uppercase;
+    }
+    /* Type colors */
+    .type-null { background: #8e8e8e; }
+    .type-grass { background: #60c14f; }
+    .type-electric { background: #f4d03f; }
+    .type-poison { background: #a569bd; }
+    .type-dark { background: #5d4037; }
+    .type-dragon { background: #764af1; }
+    .type-fire { background: #e74c3c; }
+
+    .pokemon-name-display {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: white;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-rule { font-size: 0.8rem; color: #f19f9f; margin-top: 8px; text-align: center; width: 100%; }
+
+    /* Question and Notes Area */
+    .layout-bottom {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 25px;
+    }
+    .question-card { padding: 30px; }
+    .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-p); }
+    .q-id { color: var(--primary2); font-weight: bold; font-size: 1.1rem; }
+    .q-hint { color: var(--muted); font-size: 0.9rem; }
+    .prompt { font-size: 1.35rem; line-height: 1.7; font-weight: 700; color: #1a1a1a; margin: 0 0 25px; }
+    .blank { color: var(--primary); font-weight: 800; text-decoration: underline; text-underline-offset: 4px; padding: 0 2px; }
+    
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .option {
+      border: 2px solid #f0f3f6;
+      border-radius: 15px;
+      padding: 18px;
+      text-align: left;
+      background: #fbfdff;
+      min-height: 75px;
+      font-weight: 700;
+      line-height: 1.4;
+      font-size: 1.05rem;
+      color: #333;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+      transition: all 0.2s ease;
+    }
+    .option:hover:not(:disabled) { border-color: var(--primary2); background: #f1f8ff; transform: translateY(-1px); }
+    .option:disabled { cursor: not-allowed; }
+    .option.correct { background: #eafaf1; border-color: #a3e4be; color: #27ae60; box-shadow: 0 0 15px rgba(46, 204, 113, 0.1) inset; }
+    .option.wrong { background: #fff1f1; border-color: #f5b7b1; color: #c0392b; }
+    .feedback { margin-top: 20px; font-size: 0.95rem; color: #555; background: #f8fbfd; padding: 15px; border-radius: 10px; min-height: 50px; }
+
+    /* Note box on paper */
+    .note-box {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      color: #444;
+      max-height: 350px;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.5);
+      border: 1px dashed #cedae5;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+    .note-header { display: flex; align-items: center; gap: 8px; font-weight: bold; color: #333; }
+
+    /* Modal & Toast */
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 30px; background: #2c3e50; color: white; border-radius: 999px; padding: 12px 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; z-index: 200; text-align: center; font-weight: bold; }
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); z-index: 300; padding: 20px; }
+    .modal .panel-paper { width: min(600px, 100%); text-align: center; }
+    .big-emoji { font-size: 3.5rem; margin-bottom: 10px; }
+
+    /* Animations */
+    @keyframes blink { to { background-color: #66100a; box-shadow: none; border-color: #66100a; } }
+    @keyframes scan { 0% { top: -10px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+    /* Responsiveness */
+    @media (max-width: 950px) {
+      .hero, .layout-bottom { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .options { grid-template-columns: 1fr; }
+      h1 { font-size: 1.8rem; }
+      .prompt { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="panel-paper">
+        <h1>成語寶可夢闖關王</h1>
+        <div class="sub">
+          三年級成語挑戰！答對解鎖隨機寶可夢圖鑑，答錯也別氣餒。每次重新開始都會打亂題目與選項。
+        </div>
+        <div class="toolbar">
+          <button class="btn-primary" onclick="restartGame()">⚡ 重新比賽</button>
+          <button class="btn-sm btn-blue" onclick="changeFontSize(-1)">A-</button>
+          <button class="btn-sm btn-blue" onclick="changeFontSize(1)">A+</button>
+          <button class="btn-sm btn-ghost" onclick="toggleMusic()" id="musicBtn">🎵 音樂：關</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">目前題數</div><b class="stat-value" id="progress">1/20</b></div>
+          <div class="stat"><div class="stat-label">答對</div><b class="stat-value" id="score" style="color:var(--good);">0</b></div>
+          <div class="stat"><div class="stat-label">答錯</div><b class="stat-value" id="wrong" style="color:var(--bad);">0</b></div>
+          <div class="stat"><div class="stat-label">字體</div><b class="stat-value" id="fontSizeLabel" style="font-size:1.1rem;margin-top:8px;">18px</b></div>
+        </div>
+      </div>
+
+      <!-- Rotom Pokedex Panel -->
+      <div class="panel-rotom" id="rotomPanel">
+        <div class="rotom-top">
+          <div class="rotom-leds">
+            <div class="led" id="ledGreen"></div>
+            <div class="led" id="ledRed"></div>
+          </div>
+          <div class="rotom-id">IDX-771</div>
+        </div>
+        <div class="pokemon-screen">
+          <div class="scan-line"></div>
+          <div class="pokemon-screen-chip">🔍 ROTOM SCAN</div>
+          <img id="pokemonImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="寶可夢圖鑑" />
+        </div>
+        <div class="rotom-info">
+          <div class="type-badges" id="typeBadges">
+            <span class="type-badge type-null">???</span>
+          </div>
+          <div class="pokemon-name-display" id="pokemonName">等待作答...</div>
+        </div>
+        <div class="file-rule">圖片必須與網頁放在同一個資料夾</div>
+      </div>
+    </div>
+
+    <div class="layout-bottom">
+      <div class="panel-paper question-card">
+        <div class="q-meta">
+          <div class="q-id" id="qidLabel">第 1 題</div>
+          <div class="q-hint">選擇最適合填入語句的成語</div>
+        </div>
+        <div class="prompt" id="prompt">正在從資料庫載入題目...</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+
+      <div class="panel-paper">
+        <div class="note-header">📝 <span>答題紀錄筆記</span></div>
+        <div class="note-box" id="notes">準備開始作答，紀錄將會顯示在此。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal" id="finishModal">
+    <div class="panel-paper">
+      <div class="big-emoji">🏆</div>
+      <h2 style="font-size:2rem;margin:10px 0;">闖關完成！</h2>
+      <div id="finishText" class="sub" style="margin-bottom:25px;">恭喜你答完了所有題目！</div>
+      <div class="toolbar" style="justify-content:center;">
+        <button class="btn-good btn-primary" onclick="restartGame()">再次挑戰</button>
+        <button class="btn-ghost" onclick="closeFinish()">關閉</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// === 成語資料庫 (保持原樣) ===
+const idiomsData = [
+  { idiom: "耳提面命", pronunciation: "ㄦˇ ㄊㄧˊ ㄇㄧㄢˋ ㄇㄧㄥˋ", explanation: "很認真、很詳細地一再提醒。", sentence: "出門前，媽媽{BLANK}地提醒我：「要帶水壺、不能亂跑、準時回家！」" },
+  { idiom: "手足無措", pronunciation: "ㄕㄡˇ ㄗㄨˊ ㄨˊ ㄘㄨㄛˋ", explanation: "很慌張，不知道先做什麼。", sentence: "小華發現聯絡簿沒帶，又忘了功課放哪裡，急得{BLANK}。" },
+  { idiom: "抱薪救火", pronunciation: "ㄅㄠˋ ㄒㄧㄣ ㄐㄧㄡˋ ㄏㄨㄛˇ", explanation: "用錯方法，事情反而更糟。", sentence: "小強說謊沒寫功課，又用更多謊話蒙混，這種做法根本是{BLANK}。" },
+  { idiom: "明察秋毫", pronunciation: "ㄇㄧㄥˊ ㄔㄚˊ ㄑㄧㄡ ㄏㄠˊ", explanation: "看得很細，連小地方都能發現。", sentence: "陳老師{BLANK}，全班有人偷偷傳紙條，她一眼就看穿了。" },
+  { idiom: "匹夫之勇", pronunciation: "ㄆㄧˇ ㄈㄨ ㄓ ㄩㄥˇ", explanation: "只有一時衝動，沒有好好想。", sentence: "阿豪一生氣就想動手，班長說：「這只是{BLANK}，用說的才能解決問題。」" },
+  { idiom: "以德報怨", pronunciation: "ㄧˇ ㄉㄜˊ ㄅㄠˋ ㄩㄢˋ", explanation: "別人對你不好，你還是用好心對待他。", sentence: "小玲雖然被阿梅嘲笑過，但看到阿梅跌倒，她還是立刻跑去扶她，真是{BLANK}。" },
+  { idiom: "精益求精", pronunciation: "ㄐㄧㄥ ㄧˋ ㄑㄧㄡˊ ㄐㄧㄥ", explanation: "已經很好了，還想做得更好。", sentence: "小芸的直笛在全班吹得最好，但她回家仍然每天練習，一心想要{BLANK}。" },
+  { idiom: "民不聊生", pronunciation: "ㄇㄧㄣˊ ㄅㄨˋ ㄌㄧㄠˊ ㄕㄥ", explanation: "大家生活很苦，快過不下去。", sentence: "故事裡的壞官員亂收錢又亂加稅，讓全村人{BLANK}。" },
+  { idiom: "虎視眈眈", pronunciation: "ㄏㄨˇ ㄕˋ ㄉㄢ ㄉㄢ", explanation: "盯著東西看，想找機會拿走。", sentence: "阿翔便當裡有炸雞腿，同桌的小傑一直{BLANK}地盯著。" },
+  { idiom: "義憤填膺", pronunciation: "ㄧˋ ㄈㄣˋ ㄊㄧㄢˊ ㄧㄥ", explanation: "看到不公平的事，心裡很生氣。", sentence: "社會課影片播出有人偷砍老樹，全班同學都{BLANK}。" },
+  { idiom: "理直氣壯", pronunciation: "ㄌㄧˇ ㄓˊ ㄑㄧˋ ㄓㄨㄤˋ", explanation: "因為有道理，所以說話很有底氣。", sentence: "值日生名單上寫得清清楚楚，班長{BLANK}地拿給阿宏看。" },
+  { idiom: "逃之夭夭", pronunciation: "㄄ㄠˊ ㄓ ㄧㄠ ㄧㄠ", explanation: "跑得很快，一下子就不見了。", sentence: "打掃時間，幾個偷懶的同學一聽到老師的腳步聲，馬上{BLANK}。" },
+  { idiom: "老成持重", pronunciation: "ㄌㄠˇ ㄔㄥˊ ㄔˊ ㄓㄨㄥˋ", explanation: "做事穩穩的，不會亂來。", sentence: "全班討論吵成一團，只有小璿冷靜地把意見寫在白板上，表現得非常{BLANK}。" },
+  { idiom: "口誅筆伐", pronunciation: "ㄎㄡˇ ㄓㄨ ㄅㄧˇ ㄈㄚˊ", explanation: "大家用話語或文字一起批評。", sentence: "語文課議題寫作，老師要我們針對亂丟垃圾的行為，用{BLANK}的方式寫一篇短文。" },
+  { idiom: "勢均力敵", pronunciation: "ㄕˋ ㄐㄩㄣ ㄌㄧˋ ㄉㄧˊ", explanation: "兩邊差不多強，分不出高下。", sentence: "班際拔河賽，甲班和乙班一路{BLANK}。" },
+  { idiom: "光怪陸離", pronunciation: "ㄍㄨㄤ ㄍㄨㄞˋ ㄌㄨˋ ㄌㄧˊ", explanation: "看起來奇奇怪怪、五花八門。", sentence: "萬聖節同樂會，教室裡有蝙蝠裝、南瓜頭、殭屍裝，呈現出{BLANK}的景象。" },
+  { idiom: "初出茅廬", pronunciation: "ㄔㄨ ㄔㄨ ㄇㄠˊ ㄌㄨˊ", explanation: "剛開始做，還不太有經驗。", sentence: "學校小小主播徵選，幾位{BLANK}的同學第一次站上鏡頭。" },
+  { idiom: "投機取巧", pronunciation: "ㄊㄡˊ ㄐㄧ ㄑㄩˇ ㄑㄧㄠˇ", explanation: "不認真，想靠小聰明偷懶。", sentence: "跳繩比賽，小強趁計數員回頭時多報幾下，這種{BLANK}的行為讓同學都不服氣。" },
+  { idiom: "禮尚往來", pronunciation: "ㄌㄧˇ ㄕㄤˋ ㄨㄤˇ ㄌㄞˊ", explanation: "你對我有禮貌，我也要回禮。", sentence: "上次他送了你手工生日卡，現在他生日，你準備回禮是很自然的{BLANK}。" },
+  { idiom: "耳濡目染", pronunciation: "ㄦˇ ㄖㄨˊ ㄇㄨˋ ㄖㄢˇ", explanation: "常常看到、聽到，慢慢就學會了。", sentence: "小凱的爸爸每天拉小提琴，小凱在長期{BLANK}下，還沒學樂器就能哼出許多旋律。" }
+];
+
+const wrongChoices = [
+  "一成不變", "不知所措", "大聲嚷嚷", "慢條斯理", "東奔西跑", "自以為是", "心花怒放", "七嘴八舌", "半途而廢", "井然有序", "同心協力", "輕而易舉", "膽小如鼠", "草木皆兵", "目不轉睛", "坐以待斃", "無精打采", "水落石出", "順手牽羊", "畫蛇添足", "如虎添翼", "一箭雙鵰", "按部就班", "三心二意"
+];
+
+// === 上傳的圖片資產設定 (直接使用檔名) ===
+const pokemonAssets = {
+  correct: ["正確一.png", "正確二.png", "正確三.png", "正確四.png", "正確五.png", "正確六.png", "正確七.png", "正確八.png"],
+  wrong: "答錯.png",
+  clear: "破關.png"
+};
+
+const pokemonNames = {
+  correct: ["妙蛙種子", "小火龍", "傑尼龜", "皮卡丘", "伊布", "胖丁", "喵喵", "可達鴨"],
+  wrong: "阿柏蛇",
+  clear: "快龍"
+};
+
+// 寶可夢屬性對應表
+const rotomData = {
+  idle: { badge: '<span class="type-badge type-null">---</span>', name: '等待作答...' },
+  correct: { badge: '<span class="type-badge type-grass">草</span><span class="type-badge type-electric">電</span>', name: '掃描成功！' },
+  wrong: { badge: '<span class="type-badge type-poison">毒</span><span class="type-badge type-dark">惡</span>', name: '資料錯誤' },
+  clear: { badge: '<span class="type-badge type-dragon">龍</span><span class="type-badge type-fire">火</span>', name: '闖關完成' }
+};
+
+let game = {
+  questions: [],
+  index: 0,
+  score: 0,
+  wrong: 0,
+  answered: false,
+  notesCorrect: [],
+  notesWrong: [],
+  fontSize: 18,
+  musicOn: false,
+  musicTimer: null,
+  audioCtx: null
+};
+
+// === 核心功能 ===
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildQuestions() {
+  const order = shuffle([...idiomsData]);
+  return order.map(item => {
+    const pool = wrongChoices.filter(x => x !== item.idiom);
+    const shuffledWrong = shuffle(pool);
+    const choices = shuffle([item.idiom, ...shuffledWrong.slice(0, 3)]);
+    return { ...item, choices };
+  });
+}
+
+function setFontSize(delta) {
+  game.fontSize = Math.max(14, Math.min(28, game.fontSize + delta));
+  document.documentElement.style.setProperty('--font-size', game.fontSize + 'px');
+  document.getElementById('fontSizeLabel').textContent = game.fontSize + 'px';
+}
+function changeFontSize(delta) { setFontSize(delta); }
+
+function updateStats() {
+  document.getElementById('progress').textContent = `${Math.min(game.index + 1, game.questions.length)} / ${game.questions.length}`;
+  document.getElementById('score').textContent = game.score;
+  document.getElementById('wrong').textContent = game.wrong;
+}
+
+function showToast(text) {
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.style.display = 'block';
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.style.display = 'none', 1800);
+}
+
+// === Rotom 圖鑑專用 UI 控制 ===
+const rotomPanel = document.getElementById('rotomPanel');
+const ledGreen = document.getElementById('ledGreen');
+const ledRed = document.getElementById('ledRed');
+const pokemonImgElement = document.getElementById('pokemonImage');
+const typeBadgesElement = document.getElementById('typeBadges');
+const pokemonNameElement = document.getElementById('pokemonName');
+
+function setRotomUi(type, specificSrc = null, specificName = null) {
+  // 啟動掃描動畫
+  rotomPanel.classList.add('busy');
+  let data = rotomData[type];
+  let src = '';
+  let name = '';
+
+  // 決定圖片與名稱
+  if (type === 'correct') {
+    const idx = Math.floor(Math.random() * pokemonAssets.correct.length);
+    src = pokemonAssets.correct[idx];
+    name = pokemonNames.correct[idx];
+  } else if (type === 'wrong') {
+    src = pokemonAssets.wrong;
+    name = pokemonNames.wrong;
+  } else if (type === 'clear') {
+    src = pokemonAssets.clear;
+    name = pokemonNames.clear;
+  } else {
+    src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; // spacer
+    name = data.name;
+  }
+
+  // LED 燈反應
+  if (type === 'correct') { ledGreen.classList.add('active-green'); setTimeout(()=>ledGreen.classList.remove('active-green'), 1000); }
+  if (type === 'wrong') { ledRed.classList.add('active-red'); setTimeout(()=>ledRed.classList.remove('active-red'), 1000); }
+
+  // 在動畫中切換內容
+  setTimeout(() => {
+    pokemonImgElement.src = src;
+    typeBadgesElement.innerHTML = data.badge;
+    pokemonNameElement.textContent = name;
+    rotomPanel.classList.remove('busy');
+  }, 400); // 配合 CSS 掃描時間
+}
+
+// === 筆記本與題目渲染 ===
+function buildNotes() {
+  const parts = [];
+  parts.push('<b>【答對題目】</b>');
+  if (game.notesCorrect.length) {
+    game.notesCorrect.forEach((x, i) => {
+      parts.push(`${i + 1}. <span style="color:var(--good);">${x.idiom}</span> ｜ ${x.pronunciation} ｜ ${x.explanation}`);
+    });
+  } else { parts.push('尚未有答對題目。'); }
+  parts.push('\n<b>【答錯題目】</b>');
+  if (game.notesWrong.length) {
+    game.notesWrong.forEach((x, i) => {
+      parts.push(`${i + 1}. <span style="color:var(--bad);">${x.idiom}</span> ｜ 正確答案：${x.correctAnswer} ｜ ${x.explanation}`);
+    });
+  } else { parts.push('尚未有答錯題目。'); }
+  document.getElementById('notes').innerHTML = parts.join('\n');
+}
+
+function renderQuestion() {
+  game.answered = false;
+  updateStats();
+  const q = game.questions[game.index];
+  document.getElementById('qidLabel').textContent = `第 ${game.index + 1} 題`;
+  document.getElementById('prompt').innerHTML = q.sentence.replace('{BLANK}', '<span class="blank">______</span>');
+  document.getElementById('feedback').innerHTML = '<span style="color:var(--muted);">等待選擇...</span>';
+
+  const optionsContainer = document.getElementById('options');
+  optionsContainer.innerHTML = '';
+  q.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = choice;
+    btn.onclick = () => answer(choice, btn);
+    optionsContainer.appendChild(btn);
+  });
+}
+
+// === 作答邏輯 ===
+function answer(choice, btn) {
+  if (game.answered) return;
+  game.answered = true;
+  const q = game.questions[game.index];
+  const buttons = [...document.querySelectorAll('.option')];
+  buttons.forEach(b => b.disabled = true);
+
+  const feedbackElement = document.getElementById('feedback');
+
+  if (choice === q.idiom) {
+    game.score++;
+    playCorrectSound();
+    btn.classList.add('correct');
+    setRotomUi('correct');
+    feedbackElement.innerHTML = `<b style="color:var(--good);">答對了！</b> ${q.idiom}（${q.pronunciation}）：${q.explanation}`;
+    showToast('🏆 答對了！');
+    game.notesCorrect.push(q);
+  } else {
+    game.wrong++;
+    playWrongSound();
+    btn.classList.add('wrong');
+    setRotomUi('wrong');
+    const correctBtn = buttons.find(b => b.textContent === q.idiom);
+    if (correctBtn) correctBtn.classList.add('correct');
+    feedbackElement.innerHTML = `<b style="color:var(--bad);">可惜錯了。</b> 正確答案是：${q.idiom}（${q.pronunciation}）：${q.explanation}`;
+    showToast('❌ 再試一次！');
+    game.notesWrong.push({ ...q, correctAnswer: q.idiom });
+  }
+
+  buildNotes();
+  updateStats();
+
+  setTimeout(() => {
+    if (game.index < game.questions.length - 1) {
+      game.index++;
+      renderQuestion();
+    } else { finishGame(); }
+  }, 2200); // 留久一點給玩家看解釋
+}
+
+function finishGame() {
+  setRotomUi('clear');
+  playClearSound();
+  document.getElementById('finishText').innerHTML = `你完成了 20 題成語挑戰！<br>答對 <b style="color:var(--good);font-size:1.4rem;">${game.score}</b> 題，答錯 <b style="color:var(--bad);">${game.wrong}</b> 題。`;
+  document.getElementById('finishModal').style.display = 'flex';
+}
+function closeFinish() { document.getElementById('finishModal').style.display = 'none'; }
+
+function restartGame() {
+  closeFinish();
+  game.questions = buildQuestions();
+  game.index = 0;
+  game.score = 0;
+  game.wrong = 0;
+  game.notesCorrect = [];
+  game.notesWrong = [];
+  setRotomUi('idle');
+  buildNotes();
+  updateStats();
+  renderQuestion();
+}
+
+// === 音效功能 (保持原樣) ===
+function ensureAudio() { if (!game.audioCtx) { const AudioContext = window.AudioContext || window.webkitAudioContext; game.audioCtx = new AudioContext(); } if (game.audioCtx.state === 'suspended') { game.audioCtx.resume(); } }
+function playTone(freq, duration, type = 'sine', gainValue = 0.05) { ensureAudio(); const ctx = game.audioCtx; const o = ctx.createOscillator(); const g = ctx.createGain(); o.type = type; o.frequency.value = freq; g.gain.value = gainValue; o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + duration / 1000); }
+function playCorrectSound() { playTone(523.25, 110, 'triangle', 0.05); setTimeout(() => playTone(659.25, 120, 'triangle', 0.05), 120); setTimeout(() => playTone(783.99, 180, 'triangle', 0.06), 250); }
+function playWrongSound() { playTone(220, 180, 'sawtooth', 0.04); setTimeout(() => playTone(174.61, 220, 'sawtooth', 0.04), 150); }
+function playClearSound() { const seq = [523.25, 659.25, 783.99, 1046.5, 1318.5]; seq.forEach((f, i) => setTimeout(() => playTone(f, 160, 'triangle', 0.06), i * 150)); setTimeout(() => playTone(1567.98, 260, 'sine', 0.05), 820); }
+
+function toggleMusic() {
+  game.musicOn = !game.musicOn;
+  document.getElementById('musicBtn').textContent = `🎵 音樂：${game.musicOn ? '開' : '關'}`;
+  game.musicOn ? startMusic() : stopMusic();
+  showToast(`音樂已${game.musicOn ? '開啟' : '關閉'}`);
+}
+function startMusic() { if (game.musicTimer) return; ensureAudio(); const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 523.25, 440, 523.25]; let i = 0; game.musicTimer = setInterval(() => { if (!game.musicOn) return; playTone(melody[i % melody.length], 120, 'sine', 0.015); i++; }, 280); }
+function stopMusic() { clearInterval(game.musicTimer); game.musicTimer = null; }
+
+// === 啟動 ===
+setFontSize(0);
+setRotomUi('idle');
+restartGame();
+</script>
+</body>
+</html>
