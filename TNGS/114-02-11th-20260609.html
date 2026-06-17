@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>勒沙特列原理課後小測驗｜4選1</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-weak: #dbeafe;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 35%, #f8fafc 100%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    .hero {
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 24px;
+      padding: 22px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.2;
+    }
+    .sub {
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 0;
+      font-size: 15px;
+    }
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 18px 0 12px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+      font-size: 14px;
+      color: var(--text);
+    }
+    .progress-outer {
+      width: 100%;
+      height: 12px;
+      background: #e9eef6;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-inner {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #60a5fa);
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .qno {
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 14px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .question {
+      font-size: clamp(20px, 2.3vw, 26px);
+      line-height: 1.55;
+      font-weight: 700;
+      margin: 0 0 18px;
+    }
+    .options {
+      display: grid;
+      gap: 12px;
+    }
+    .option {
+      width: 100%;
+      text-align: left;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 18px;
+      padding: 15px 16px;
+      font-size: 16px;
+      line-height: 1.55;
+      cursor: pointer;
+      transition: transform .08s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .option:hover {
+      border-color: #bfd3ff;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.08);
+      transform: translateY(-1px);
+    }
+    .option.selected {
+      border-color: var(--primary);
+      background: var(--primary-weak);
+    }
+    .option.correct {
+      border-color: rgba(22,163,74,.3);
+      background: rgba(34,197,94,.1);
+    }
+    .option.wrong {
+      border-color: rgba(220,38,38,.3);
+      background: rgba(239,68,68,.08);
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform .08s ease, opacity .2s ease, background .2s ease;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-secondary {
+      background: #e5eefc;
+      color: #1e3a8a;
+    }
+    .btn-ghost {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+    .feedback {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      display: none;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    .feedback.show { display: block; }
+    .feedback.correct {
+      background: rgba(34,197,94,.1);
+      color: #166534;
+      border: 1px solid rgba(22,163,74,.22);
+    }
+    .feedback.wrong {
+      background: rgba(239,68,68,.08);
+      color: #991b1b;
+      border: 1px solid rgba(220,38,38,.18);
+    }
+    .footer-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .result {
+      text-align: center;
+      padding: 18px 6px 6px;
+    }
+    .score {
+      font-size: clamp(42px, 7vw, 72px);
+      font-weight: 800;
+      color: var(--primary);
+      margin: 8px 0 6px;
+    }
+    .small {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .hidden { display: none !important; }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <span class="tag">化學｜平衡與勒沙特列原理</span>
+      <h1>課後加強小測驗：4 選 1</h1>
+      <p class="sub">共 50 題。每題對應一張重點字卡，作答後會立即顯示正確答案與簡短解析。完成後可重新開始再練一次。</p>
+      <div class="progress-outer" aria-hidden="true"><div class="progress-inner" id="progressBar"></div></div>
+      <div class="topbar">
+        <div class="pill" id="progressText">第 1 題 / 50 題</div>
+        <div class="pill" id="scoreText">目前得分：0</div>
+      </div>
+    </div>
+
+    <div class="card" id="quizCard">
+      <div class="qno" id="qno">題目 1</div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="controls">
+        <button class="btn btn-primary" id="submitBtn" disabled>送出答案</button>
+        <button class="btn btn-secondary hidden" id="nextBtn">下一題</button>
+        <button class="btn btn-ghost hidden" id="restartBtn">重新開始</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="footer-note">建議學生先獨立作答，再看解析。若要直接開放給班級使用，可把這個 HTML 放到 GitHub Pages、Google Sites 外掛頁面或一般靜態主機。</div>
+    </div>
+
+    <div class="card result hidden" id="resultCard">
+      <h2 style="margin:0 0 6px;font-size:28px;">測驗完成</h2>
+      <div class="score" id="finalScore">0 / 50</div>
+      <div class="small" id="finalMsg"></div>
+      <div class="controls" style="justify-content:center;">
+        <button class="btn btn-primary" id="restartBtn2">再挑戰一次</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [{"q": "在未達平衡時，反應商 Q 與平衡常數 K 的關係，最正確的是？", "options": ["Q = K", "Q ≠ K", "Q = 0", "Q 一定大於 K"], "a": 1, "exp": "未達平衡時，Q 與 K 不相等。"}, {"q": "若 Q < K，系統接下來最可能往哪個方向移動？", "options": ["向左移動", "向右移動", "完全不變", "先上升再下降"], "a": 1, "exp": "Q < K 表示生成物偏少，系統會向右移動以達平衡。"}, {"q": "若 Q > K，系統接下來最可能往哪個方向移動？", "options": ["向左移動", "向右移動", "停止反應", "只改變速率不改變方向"], "a": 0, "exp": "Q > K 表示生成物偏多，系統會向左移動。"}, {"q": "勒沙特列原理的核心概念是什麼？", "options": ["系統會順著外力改變", "系統會抵抗外部破壞並重新達到新平衡", "平衡一旦建立就不會改變", "只有溫度改變才會影響平衡"], "a": 1, "exp": "系統會朝抵抗外部變化的方向移動。"}, {"q": "下列哪一項最能破壞平衡？", "options": ["改變濃度、壓力、體積", "只看顏色", "只改變容器形狀但不改變體積", "把方程式寫得更漂亮"], "a": 0, "exp": "濃度、壓力、體積、加入/移走物質與溫度都可能影響平衡。"}, {"q": "若直接加入反應物，在濃度－時間圖上，該物質的濃度會先出現什麼現象？", "options": ["水平不變", "瞬間垂直飆升", "緩慢下降", "先下降再上升"], "a": 1, "exp": "外部加入會造成濃度立刻上升。"}, {"q": "加入反應物後，系統為了抵抗這個改變，平衡通常會怎麼移動？", "options": ["向左移動", "向右移動", "不移動", "隨機移動"], "a": 1, "exp": "系統會消耗新增的反應物，所以通常向右移動。"}, {"q": "平衡向右移動時，濃度隨時間的變化最合理的是？", "options": ["反應物下降、生成物上升", "反應物上升、生成物下降", "兩者都不變", "兩者都瞬間歸零"], "a": 0, "exp": "右移表示反應物被消耗、生成物增加。"}, {"q": "平衡移動時，各物種濃度變化比例必須遵守什麼？", "options": ["顏色深淺", "化學反應方程式的係數比", "容器大小", "溫度高低"], "a": 1, "exp": "濃度變化的比例必須符合係數比。"}, {"q": "「破壞效應大於移動效應」最適合用來說明什麼？", "options": ["外部操作造成的改變通常比後續平衡移動更大", "平衡移動比外部操作更強", "兩者永遠一樣大", "只有溫度才會有此現象"], "a": 0, "exp": "外部操作先造成大改變，之後平衡移動只會部分修正。"}, {"q": "加入某物質後達到新平衡，該物質的最終濃度通常如何？", "options": ["一定比舊平衡低", "一定等於 0", "通常仍比舊平衡高", "一定完全不變"], "a": 2, "exp": "因為外部加入的量通常大於後續平衡消耗量，所以最終濃度仍偏高。"}, {"q": "若將生成物抽走，系統通常會怎麼移動？", "options": ["向左移動", "向右移動", "停止反應", "先不變再跳動"], "a": 1, "exp": "系統會補回被移走的生成物，所以向右移動。"}, {"q": "系統處於平衡狀態時，正反應速率與逆反應速率的關係是？", "options": ["正反應速率大於逆反應速率", "正反應速率小於逆反應速率", "兩者相等", "兩者都等於零"], "a": 2, "exp": "動態平衡時，正逆反應速率相等。"}, {"q": "加入反應物後，正反應速率會先出現什麼變化？", "options": ["瞬間垂直飆升，成為新的 R正'", "立刻歸零", "完全不變", "先下降後上升"], "a": 0, "exp": "反應物濃度瞬間上升，正反應速率也會瞬間上升。"}, {"q": "在速率－時間圖中，平衡移動過程最典型的現象是？", "options": ["較大的速率上升，較小的速率下降", "兩速率最後再次齊頭相等", "兩速率永遠不會相交", "只有正反應速率改變"], "a": 1, "exp": "系統調整後，兩個速率會再次相等。"}, {"q": "若破壞平衡的瞬間出現 R正 > R逆，代表什麼？", "options": ["系統整體趨勢向右移動", "系統整體趨勢向左移動", "系統已經停止", "一定是溫度下降"], "a": 0, "exp": "正反應較快時，系統會朝生成物方向前進。"}, {"q": "判斷平衡移動時，哪一種比較方式通常更精準？", "options": ["先看濃度，不看莫耳數", "先看莫耳數的變化", "只看顏色", "只看壓力"], "a": 1, "exp": "濃度受莫耳數與體積共同影響，先看莫耳數較準。"}, {"q": "在大量水的環境中，水在平衡計算中的角色最正確的是？", "options": ["水的濃度視為固定值，不易改變", "水一定會被完全消耗", "水一定不參與反應", "水的濃度會劇烈波動"], "a": 0, "exp": "大量水常可視為定值，不影響平衡移動判斷。"}, {"q": "鉻酸根 CrO4^2- 在水溶液中呈現什麼顏色？", "options": ["黃色", "橘色", "綠色", "無色"], "a": 0, "exp": "鉻酸根在水溶液中為黃色。"}, {"q": "二鉻酸根 Cr2O7^2- 在水溶液中呈現什麼顏色？", "options": ["黃色", "橘色", "藍色", "紅色"], "a": 1, "exp": "二鉻酸根在水溶液中為橘色。"}, {"q": "當兩種顏色比例差距極大，例如 1:100 時，肉眼最可能看到什麼？", "options": ["兩種顏色都很明顯", "只看到濃度極高的那一種顏色", "顏色一定變黑", "一定完全看不出顏色"], "a": 1, "exp": "微量成分通常會被主要顏色蓋過。"}, {"q": "加入強酸 HCl 對鉻酸平衡系統的直接影響是什麼？", "options": ["直接增加大量 H+", "直接增加大量 OH-", "直接把 CrO4^2- 變成固體", "沒有影響"], "a": 0, "exp": "強酸等於瞬間加入大量 H+。"}, {"q": "加入酸後，鉻酸／二鉻酸平衡通常往哪裡移動？", "options": ["向左移動", "向右移動", "不移動", "先右後左"], "a": 1, "exp": "為了消耗增加的 H+，系統會向右移動。"}, {"q": "加酸後，溶液顏色最可能如何改變？", "options": ["黃轉橘", "橘轉黃", "黃轉綠", "完全不變"], "a": 0, "exp": "右移使二鉻酸根增加，顏色偏橘。"}, {"q": "加入強鹼 NaOH 對鉻酸平衡系統的直接影響是什麼？", "options": ["大量抽走 H+", "大量補充 H+", "直接增加 Cr2O7^2-", "讓水變成固體"], "a": 0, "exp": "OH- 會和 H+ 中和，使 H+ 濃度下降。"}, {"q": "加鹼後，鉻酸／二鉻酸平衡通常往哪裡移動？", "options": ["向左移動", "向右移動", "不移動", "只改變速率不改變位置"], "a": 0, "exp": "為了補回被中和掉的 H+，系統會向左移動。"}, {"q": "加鹼後，溶液顏色最可能如何改變？", "options": ["橘轉黃", "黃轉橘", "藍轉綠", "完全不變"], "a": 0, "exp": "左移使鉻酸根增加，顏色偏黃。"}, {"q": "圖表上各物種濃度的變化間距，最常對應到什麼？", "options": ["方程式的係數比", "溶液顏色", "容器材質", "分子量大小"], "a": 0, "exp": "濃度變化間距會遵守反應式係數比。"}, {"q": "加入大量水進行稀釋時，這個操作的意義最接近什麼？", "options": ["讓體積變大，給溶質粒子更大活動空間", "讓溶質消失", "讓反應完全停止", "只改變顏色，不改變濃度"], "a": 0, "exp": "加水會使體積增大，空間變多。"}, {"q": "加水稀釋的瞬間，所有溶質濃度通常會怎樣？", "options": ["瞬間上升", "瞬間崩盤式下降", "完全不變", "先上升再下降"], "a": 1, "exp": "體積瞬間變大，濃度會立刻下降。"}, {"q": "加水稀釋對平衡的影響原理，最符合哪一句？", "options": ["系統傾向產生粒子總係數較大的方向", "系統傾向產生粒子總係數較小的方向", "系統永遠向左", "系統永遠向右"], "a": 0, "exp": "空間變大時，系統偏向粒子數較多的一側。"}, {"q": "鉻酸平衡系統加水後，根據粒子總係數判斷，通常往哪裡移動？", "options": ["向左移動", "向右移動", "不移動", "只看溫度而定"], "a": 0, "exp": "左邊離子係數和較大，因此加水後偏向左邊。"}, {"q": "若加入吸水劑，使體積空間變小，系統通常往哪個方向移動？", "options": ["粒子總係數較小的方向", "粒子總係數較大的方向", "完全不移動", "一定向右"], "a": 0, "exp": "空間變小時，系統偏向粒子較少的一側。"}, {"q": "加水稀釋後，哪一種敘述最正確？", "options": ["新平衡的莫耳數與原本完全相同", "朝總係數大的方向那一側，莫耳數會反彈上升", "所有物種莫耳數都變成 0", "只有生成物莫耳數上升"], "a": 1, "exp": "平衡會朝粒子數較多的一側補回部分莫耳數。"}, {"q": "加水稀釋後的新平衡濃度，通常與原平衡相比如何？", "options": ["所有物種都比原本高", "所有物種都比原本低", "完全一樣", "只會有一種物種變高"], "a": 1, "exp": "體積變大造成的稀釋效應通常仍占優勢。"}, {"q": "加水對反應速率的瞬間影響，最典型的是？", "options": ["正反應與逆反應速率都瞬間大跌", "只有正反應速率下降", "只有逆反應速率下降", "兩者都瞬間上升"], "a": 0, "exp": "濃度下降會使正逆反應速率都立刻降低。"}, {"q": "鉻酸鋇 BaCrO4 的性質最正確的是？", "options": ["黃色且難溶的沉澱", "橘色且完全可溶", "無色氣體", "黑色金屬"], "a": 0, "exp": "鉻酸鋇是黃色、難溶的沉澱。"}, {"q": "對鉻酸鋇沉澱加酸，最直接的結果是？", "options": ["H+ 會把鉻酸根轉成二鉻酸根", "H+ 會把鋇離子變成金屬鋇", "H+ 會讓沉澱立刻增厚", "完全沒有影響"], "a": 0, "exp": "H+ 會消耗鉻酸根，使平衡持續向右溶解。"}, {"q": "加酸使鉻酸鋇沉澱溶解的主要原因是什麼？", "options": ["因為鉻酸根一直被消耗，溶解平衡只能持續向右移動", "因為沉澱遇到酸一定變成氣體", "因為鋇離子突然消失", "因為溫度一定上升"], "a": 0, "exp": "鉻酸根被抽走，沉澱只能持續解離。"}, {"q": "二鉻酸鋇 BaCr2O7 的特性最正確的是？", "options": ["溶解度很好，水溶液呈橘色", "非常難溶且一定是黃色", "一定是白色沉澱", "不會出現在水中"], "a": 0, "exp": "二鉻酸鋇溶解度高，溶液呈橘色。"}, {"q": "對二鉻酸根系統加鹼後，為何可能產生鉻酸鋇沉澱？", "options": ["因為平衡左移產生大量鉻酸根，再和鋇離子結合", "因為 OH- 直接變成沉澱", "因為二鉻酸根全部蒸發", "因為水變少所以一定沉澱"], "a": 0, "exp": "加鹼使系統左移，鉻酸根增加並與 Ba2+ 結合。"}, {"q": "異相平衡的概念是什麼？", "options": ["同時存在不同相態，例如固體與水溶液共存", "只有氣體存在", "只有液體存在", "所有物質都在同一個相"], "a": 0, "exp": "異相平衡就是不同相共存的平衡。"}, {"q": "純固體在平衡中的濃度特性，最正確的是？", "options": ["會隨質量改變", "為定值，不隨固體量改變", "會瞬間變成 0", "只看顏色而定"], "a": 1, "exp": "純固體的濃度或密度可視為定值。"}, {"q": "加入純固體對舊平衡的影響通常是？", "options": ["平衡不移動", "一定向右移動", "一定向左移動", "速率全部變成零"], "a": 0, "exp": "純固體濃度不變，所以通常不影響平衡。"}, {"q": "要有效破壞水溶液平衡，通常應該改變什麼？", "options": ["離子或可溶物的濃度", "固體的外觀", "容器顏色", "攪拌棒長度"], "a": 0, "exp": "真正影響平衡的是可溶物與離子的濃度改變。"}, {"q": "當反應向右移動時，哪一項觀察最合理？", "options": ["反應物濃度下降、生成物濃度上升", "反應物濃度上升、生成物濃度下降", "兩者都不變", "一定會變成無色"], "a": 0, "exp": "右移代表反應物被消耗、生成物增加。"}, {"q": "外部人為操作與系統自身平衡移動，在圖表上的典型差異是？", "options": ["外部操作多為垂直變化，平衡移動多為平滑曲線", "兩者都一定是水平線", "外部操作一定比平衡移動慢", "平衡移動一定是垂直線"], "a": 0, "exp": "外部操作會瞬間改變數值，平衡移動則是逐步調整。"}, {"q": "用「股票跌停」來比喻平衡破壞，最想表達什麼？", "options": ["濃度或速率瞬間斷崖式崩盤", "顏色會變成股票圖", "反應一定變快", "平衡一定不受影響"], "a": 0, "exp": "這是用來形容瞬間大幅下跌的情形。"}, {"q": "判斷氣體平衡受壓力／體積影響時，常用哪個量作為指標？", "options": ["Δn = 氣體生成物總係數 − 氣體反應物總係數", "溫度差", "顏色差", "pH 值"], "a": 0, "exp": "Δn 可用來判斷壓力或體積改變的影響方向。"}, {"q": "勒沙特列原理的口訣「你要我做什麼，我偏不做」最想提醒什麼？", "options": ["系統會反抗外部施加的濃度或體積變化", "系統會完全照著外力走", "系統只對溫度有反應", "系統永遠停在原地"], "a": 0, "exp": "系統會朝抵抗外界改變的方向移動。"}];
+
+    let current = 0;
+    let score = 0;
+    let selected = null;
+    let answered = false;
+
+    const qnoEl = document.getElementById('qno');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const submitBtn = document.getElementById('submitBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const restartBtn2 = document.getElementById('restartBtn2');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const scoreText = document.getElementById('scoreText');
+    const quizCard = document.getElementById('quizCard');
+    const resultCard = document.getElementById('resultCard');
+    const finalScore = document.getElementById('finalScore');
+    const finalMsg = document.getElementById('finalMsg');
+
+    function updateTop() {
+      const total = QUESTIONS.length;
+      progressText.textContent = `第 ${Math.min(current + 1, total)} 題 / ${total} 題`;
+      scoreText.textContent = `目前得分：${score}`;
+      progressBar.style.width = `${(current / total) * 100}%`;
+    }
+
+    function renderQuestion() {
+      answered = false;
+      selected = null;
+      feedbackEl.className = 'feedback';
+      feedbackEl.textContent = '';
+      submitBtn.disabled = true;
+      submitBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+      restartBtn.classList.add('hidden');
+
+      const item = QUESTIONS[current];
+      qnoEl.textContent = `題目 ${current + 1}`;
+      questionEl.textContent = item.q;
+      optionsEl.innerHTML = '';
+
+      item.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.type = 'button';
+        btn.innerHTML = `<strong>${String.fromCharCode(65 + idx)}.</strong> ${opt}`;
+        btn.addEventListener('click', () => {
+          if (answered) return;
+          selected = idx;
+          [...optionsEl.children].forEach(el => el.classList.remove('selected'));
+          btn.classList.add('selected');
+          submitBtn.disabled = false;
+        });
+        optionsEl.appendChild(btn);
+      });
+
+      updateTop();
+    }
+
+    function submitAnswer() {
+      if (selected === null || answered) return;
+      answered = true;
+      const item = QUESTIONS[current];
+      const optionButtons = [...optionsEl.children];
+      optionButtons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === item.a) btn.classList.add('correct');
+        if (idx === selected && selected !== item.a) btn.classList.add('wrong');
+      });
+
+      const correct = selected === item.a;
+      if (correct) score += 1;
+      scoreText.textContent = `目前得分：${score}`;
+
+      feedbackEl.classList.add('show');
+      feedbackEl.classList.add(correct ? 'correct' : 'wrong');
+      feedbackEl.textContent = (correct ? '答對了！' : '答錯了。') + ' ' + item.exp;
+
+      submitBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      restartBtn.classList.remove('hidden');
+      updateTop();
+    }
+
+    function nextQuestion() {
+      if (current < QUESTIONS.length - 1) {
+        current += 1;
+        renderQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      quizCard.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+      progressBar.style.width = '100%';
+      progressText.textContent = `完成 ${QUESTIONS.length} 題`;
+      finalScore.textContent = `${score} / ${QUESTIONS.length}`;
+      const pct = Math.round((score / QUESTIONS.length) * 100);
+      let msg = '';
+      if (pct >= 90) msg = '表現非常好，概念已經很穩。';
+      else if (pct >= 70) msg = '掌握得不錯，再複習錯題會更穩。';
+      else if (pct >= 50) msg = '已經有基礎，建議把平衡移動方向與圖表變化再看一次。';
+      else msg = '建議先重新複習重點字卡，再來挑戰一次。';
+      finalMsg.textContent = `正確率 ${pct}%。${msg}`;
+    }
+
+    function restartQuiz() {
+      current = 0;
+      score = 0;
+      selected = null;
+      answered = false;
+      quizCard.classList.remove('hidden');
+      resultCard.classList.add('hidden');
+      renderQuestion();
+    }
+
+    submitBtn.addEventListener('click', submitAnswer);
+    nextBtn.addEventListener('click', nextQuestion);
+    restartBtn.addEventListener('click', restartQuiz);
+    restartBtn2.addEventListener('click', restartQuiz);
+
+    renderQuestion();
+  </script>
+</body>
+</html>
