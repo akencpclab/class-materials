@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>高二化學練習｜氣體平衡與平衡移動進階</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0f1923;
+    --surface: #1a2736;
+    --surface2: #223044;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --text: #e8f4f8;
+    --text-muted: #8badc0;
+    --border: #2d4a63;
+    --font-size: 16px;
+    --card-radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: var(--font-size);
+    min-height: 100vh;
+    transition: background 0.4s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(15,25,35,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .topbar-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.9em;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 10px;
+  }
+
+  .ctrl-label {
+    font-size: 0.72em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .ctrl-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 7px;
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.1s;
+    touch-action: manipulation;
+  }
+  .ctrl-btn:active { transform: scale(0.9); }
+
+  .font-display {
+    font-size: 0.8em;
+    color: var(--accent);
+    font-weight: 700;
+    min-width: 32px;
+    text-align: center;
+  }
+
+  .color-swatches { display: flex; gap: 5px; align-items: center; }
+  .swatch {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    touch-action: manipulation;
+  }
+  .swatch:active { transform: scale(1.2); }
+  .swatch.active { border-color: var(--accent); transform: scale(1.15); }
+
+  .score-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.8em;
+    font-weight: 700;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .score-badge span { color: var(--accent); }
+
+  /* ── MAIN ── */
+  .main { max-width: 720px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  /* ── PROGRESS ── */
+  .progress-wrap { margin-bottom: 18px; }
+  .progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 0.78em; color: var(--text-muted); margin-bottom: 6px;
+  }
+  .progress-track { height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 24px 22px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+  .q-tag {
+    display: inline-block;
+    font-size: 0.68em; font-weight: 700;
+    color: var(--accent2);
+    background: rgba(124,58,237,0.15);
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 6px; padding: 2px 8px;
+    margin-bottom: 12px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .q-text { font-size: 1.05em; line-height: 1.7; color: var(--text); font-weight: 500; }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+  .option-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    text-align: left;
+    cursor: pointer;
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 0.95em; line-height: 1.6;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .option-btn:active:not(:disabled) { transform: scale(0.98); }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: var(--surface2); }
+
+  .opt-letter {
+    width: 28px; height: 28px; min-width: 28px;
+    border-radius: 8px;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85em;
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--text-muted);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    margin-top: 1px;
+  }
+  .opt-text { flex: 1; }
+
+  .option-btn.correct { border-color: var(--correct); background: rgba(34,197,94,0.12); animation: pulse-correct 0.4s ease; }
+  .option-btn.correct .opt-letter { background: var(--correct); border-color: var(--correct); color: #fff; }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.1); animation: shake 0.4s ease; }
+  .option-btn.wrong .opt-letter { background: var(--wrong); border-color: var(--wrong); color: #fff; }
+  .option-btn.reveal { border-color: var(--correct); background: rgba(34,197,94,0.07); }
+  .option-btn.reveal .opt-letter { background: var(--correct); border-color: var(--correct); color: #fff; }
+  .option-btn:disabled { cursor: default; }
+
+  @keyframes pulse-correct {
+    0% { transform: scale(1); } 40% { transform: scale(1.025); } 100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-5px); } 40%,80% { transform: translateX(5px); }
+  }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+    font-size: 0.9em; line-height: 1.7; display: none;
+  }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.correct-fb { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+  .feedback.wrong-fb { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .fb-emoji { font-size: 1.2em; margin-right: 6px; }
+  .fb-title { font-weight: 700; margin-bottom: 4px; }
+  .fb-explain { color: var(--text); opacity: 0.85; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── NEXT BUTTON ── */
+  .next-btn {
+    width: 100%; padding: 15px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; font-size: 1em; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: pointer; display: none;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.03em; touch-action: manipulation;
+  }
+  .next-btn.show { display: block; animation: fadeIn 0.3s ease; }
+  .next-btn:active { transform: scale(0.98); opacity: 0.9; }
+
+  /* ── START SCREEN ── */
+  .start-screen { text-align: center; padding: 24px 16px; animation: fadeIn 0.5s ease; }
+  .start-screen.hidden { display: none; }
+  .start-logo { font-size: 3em; margin-bottom: 12px; }
+  .start-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.5em; font-weight: 700; line-height: 1.3; margin-bottom: 6px;
+    background: linear-gradient(135deg, #7c3aed, #00d4ff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .start-sub { color: var(--text-muted); font-size: 0.9em; margin-bottom: 28px; line-height: 1.6; }
+  .start-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; text-align: left; }
+  .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .info-icon { font-size: 1.4em; margin-bottom: 6px; }
+  .info-label { font-size: 0.75em; color: var(--text-muted); margin-bottom: 2px; }
+  .info-val { font-size: 0.9em; font-weight: 700; }
+  .start-btn {
+    width: 100%; max-width: 320px; padding: 16px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; font-size: 1.05em; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: pointer; letter-spacing: 0.04em; touch-action: manipulation;
+    transition: transform 0.1s, opacity 0.2s;
+    box-shadow: 0 6px 24px rgba(0,212,255,0.25);
+  }
+  .start-btn:active { transform: scale(0.97); }
+
+  /* ── QUIZ AREA ── */
+  .quiz-area { animation: fadeIn 0.3s ease; }
+  .quiz-area.hidden { display: none; }
+
+  /* ── RESULT SCREEN ── */
+  .result-screen { display: none; text-align: center; padding: 30px 20px; animation: fadeIn 0.5s ease; }
+  .result-screen.show { display: block; }
+  .result-emoji { font-size: 4em; margin-bottom: 16px; display: block; }
+  .result-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6em; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .result-sub { color: var(--text-muted); margin-bottom: 24px; font-size: 0.95em; }
+  .result-score-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--card-radius); padding: 24px; margin-bottom: 24px;
+  }
+  .result-big-num { font-family: 'Space Grotesk', sans-serif; font-size: 3.5em; font-weight: 700; color: var(--accent); line-height: 1; }
+  .result-big-denom { font-size: 0.5em; color: var(--text-muted); }
+  .result-stats { display: flex; justify-content: center; gap: 24px; margin-top: 16px; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.4em; font-weight: 700; }
+  .stat-label { font-size: 0.75em; color: var(--text-muted); }
+  .stat.c .stat-num { color: var(--correct); }
+  .stat.w .stat-num { color: var(--wrong); }
+  .restart-btn {
+    width: 100%; max-width: 320px; padding: 15px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; font-size: 1em; font-weight: 700;
+    font-family: 'Space Grotesk', sans-serif;
+    cursor: pointer; letter-spacing: 0.03em; touch-action: manipulation; transition: transform 0.1s;
+  }
+  .restart-btn:active { transform: scale(0.97); }
+
+  /* ── STREAK TOAST ── */
+  .streak-toast {
+    position: fixed; top: 70px; right: 16px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff; padding: 8px 14px; border-radius: 10px;
+    font-size: 0.85em; font-weight: 700;
+    z-index: 200; pointer-events: none;
+    opacity: 0; transform: translateY(-8px);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .streak-toast.show { opacity: 1; transform: translateY(0); }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">⚗️ 化學平衡·進階練習</div>
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">字級</span>
+      <button class="ctrl-btn" onclick="changeFont(-1)" aria-label="縮小字體">−</button>
+      <span class="font-display" id="fontDisplay">16</span>
+      <button class="ctrl-btn" onclick="changeFont(1)" aria-label="放大字體">＋</button>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">背景</span>
+      <div class="color-swatches" id="swatches"></div>
+    </div>
+    <div class="score-badge" id="scoreBadge" style="display:none">
+      ✓ <span id="scoreNum">0</span> / <span id="scoreDen">0</span>
+    </div>
+  </div>
+</div>
+
+<div class="streak-toast" id="streakToast"></div>
+
+<div class="main">
+
+  <!-- START -->
+  <div class="start-screen" id="startScreen">
+    <div class="start-logo">🧪</div>
+    <div class="start-title">高二化學<br>氣體平衡進階</div>
+    <div class="start-sub">涵蓋 NO₂⇌N₂O₄ 氣體系統、體積加壓／減壓<br>硝酸鹽特性、Ba²⁺沉澱、定性／定量分析等<br>每次啟動題目與選項都隨機排列</div>
+    <div class="start-info">
+      <div class="info-card">
+        <div class="info-icon">📝</div>
+        <div class="info-label">題目數量</div>
+        <div class="info-val" id="qCountDisplay">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🔀</div>
+        <div class="info-label">出題方式</div>
+        <div class="info-val">隨機排列</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">🎵</div>
+        <div class="info-label">互動音效</div>
+        <div class="info-val">答題反饋</div>
+      </div>
+      <div class="info-card">
+        <div class="info-icon">📱</div>
+        <div class="info-label">適用裝置</div>
+        <div class="info-val">手機 / 平板</div>
+      </div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">開始練習 🚀</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-area hidden" id="quizArea">
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span id="qProgress">第 1 題 / 共 — 題</span>
+        <span id="qPercent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-tag">單選題</div>
+      <div class="q-text" id="questionText">題目載入中…</div>
+    </div>
+
+    <div class="options" id="optionsList"></div>
+
+    <div class="feedback" id="feedback">
+      <div class="fb-emoji" id="fbEmoji"></div>
+      <div class="fb-title" id="fbTitle"></div>
+      <div class="fb-explain" id="fbExplain"></div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">下一題 →</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-screen" id="resultScreen">
+    <span class="result-emoji" id="resultEmoji">🎉</span>
+    <div class="result-title" id="resultTitle">練習完成！</div>
+    <div class="result-sub" id="resultSub">來看看你的成績吧</div>
+    <div class="result-score-card">
+      <div class="result-big-num" id="resultBigNum">0<span class="result-big-denom" id="resultBigDen">/0</span></div>
+      <div style="color:var(--text-muted);font-size:0.8em;margin-top:6px;">答對題數</div>
+      <div class="result-stats">
+        <div class="stat c"><div class="stat-num" id="rCorrect">0</div><div class="stat-label">✅ 答對</div></div>
+        <div class="stat w"><div class="stat-num" id="rWrong">0</div><div class="stat-label">❌ 答錯</div></div>
+        <div class="stat"><div class="stat-num" id="rPct" style="color:var(--accent)">0%</div><div class="stat-label">🎯 正確率</div></div>
+      </div>
+    </div>
+    <button class="restart-btn" onclick="restartQuiz()">🔄 再練習一次</button>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   題庫：第二組字卡（30題）
+═══════════════════════════════════════════════════ */
+const QUESTIONS = [
+  {
+    q: "當平衡系統受到破壞（如加水稀釋），系統接下來會發生什麼？",
+    opts: ["系統永久失去平衡，無法恢復", "系統會為了重新達到平衡而發生移動（Shift）", "系統直接跳到新平衡，沒有過渡過程", "只有溫度改變才能讓系統移動"],
+    ans: 1,
+    explain: "化學平衡移動的動力：當系統受到破壞，當下失去平衡，系統會為了重新達到平衡而發生移動（Shift）。勒沙特列原理的核心就是這個自我修復機制。"
+  },
+  {
+    q: "加水稀釋對溶液中離子濃度的「瞬間」影響為何？",
+    opts: ["各離子濃度依反應速率各自改變", "只有反應物濃度下降，產物不變", "體積突然變大，所有離子的濃度瞬間「崩盤」急速下降", "濃度不變，需等待平衡移動後才改變"],
+    ans: 2,
+    explain: "加水稀釋對濃度的瞬間影響：體積突然變大，所有離子的濃度瞬間「崩盤」掉下來（急速下降）。這是稀釋的直接物理效應，發生在平衡移動之前。"
+  },
+  {
+    q: "加水稀釋後，平衡會朝哪個方向移動？原因為何？",
+    opts: ["朝粒子數較少的一側，因為體積縮小了", "朝方程式兩邊粒子數（係數和）較多的那一側，因為體積變大有優勢", "平衡不移動，因為所有物質都被稀釋了", "只有氣體反應才會受體積影響"],
+    ans: 1,
+    explain: "加水使體積變大，平衡會朝方程式兩邊「粒子數（係數和）較多」的那一側移動，因為有體積優勢——更大的體積讓多粒子那邊更有利。"
+  },
+  {
+    q: "平衡「朝右移動」代表莫耳數如何變化？",
+    opts: ["右邊物質莫耳數下降，左邊物質莫耳數上升", "左右兩邊莫耳數同時上升", "右邊物質的莫耳數上升，左邊物質的莫耳數下降", "莫耳數不變，只有濃度改變"],
+    ans: 2,
+    explain: "莫耳數與平衡移動方向的對接：平衡「朝右移動」，代表右邊物質的莫耳數上升，左邊物質的莫耳數下降。這是追蹤各物質變化的基礎邏輯。"
+  },
+  {
+    q: "Fe³⁺ 與 SCN⁻ 反應後，生成物 FeSCN²⁺ 的顏色為何？",
+    opts: ["橘色", "黃褐色", "無色", "血紅色"],
+    ans: 3,
+    explain: "Fe³⁺（黃褐色）與 SCN⁻（無色）反應，生成的 FeSCN²⁺ 呈血紅色。這三種顏色都要記住，高中化學常考！"
+  },
+  {
+    q: "對血紅色平衡系統加水稀釋，顏色的完整變化過程為何？",
+    opts: ["先變深後回到原本", "直接變深，不會再改變", "先瞬間變淺（稀釋），接著平衡右移生成更多 FeSCN²⁺（稍微變深），但最終仍比原本淺", "顏色完全不變"],
+    ans: 2,
+    explain: "加水稀釋對血紅色深淺的影響過程：加水瞬間濃度下降（顏色變淺）→ 接著平衡朝右移動生成更多 FeSCN²⁺（顏色稍微變深）→ 但最終仍比原本淺。破壞效應 > 移動效應。"
+  },
+  {
+    q: "「濃度會騙人，莫耳數不會騙人」這句話的意思是？",
+    opts: ["莫耳數永遠比濃度更重要", "體積改變時，物質的莫耳數可能增加，但因為體積變大更多，最終濃度仍是下降的", "只有在氣體反應中，濃度才會騙人", "莫耳數不受體積影響，所以更可靠"],
+    ans: 1,
+    explain: "「濃度會騙人，莫耳數不會騙人」：體積改變時，物質的莫耳數可能增加（例如平衡移動後），但因為體積變大更多，最終濃度仍是下降的。不能只看莫耳數就直接判斷濃度！"
+  },
+  {
+    q: "在水溶液中加入固體（如 NaOH 固體），整個水溶液的體積如何改變？",
+    opts: ["體積大幅增加，相當於加水稀釋", "體積幾乎不會發生變化", "體積減小，因為固體佔據空間", "體積改變取決於固體的密度"],
+    ans: 1,
+    explain: "加入固體對體積的影響：在水溶液中加入固體（如 NaOH 固體），整個水溶液的體積幾乎不會發生變化。這與「加水」的稀釋效應完全不同。"
+  },
+  {
+    q: "在判斷平衡移動時，純水（H₂O）與固體通常如何處理？",
+    opts: ["需要精確計算其莫耳數和濃度", "純液體（水）與固體通常不影響濃度商數，判斷平衡移動時可以直接忽略其干擾", "水的濃度必須列入平衡計算", "純水不影響，但固體必須計算"],
+    ans: 1,
+    explain: "純液體（水）與固體通常不會影響濃度商數，判斷平衡移動時可以直接打叉忽略其干擾——這是寫化學平衡常數方程式的重要規則。"
+  },
+  {
+    q: "「加水」vs.「加入純水物質」的概念差異為何？",
+    opts: ["兩者完全相同，沒有差異", "加水的作用是讓整體體積變大（破壞平衡），而不是單純增加一種不變濃度的物質", "加入純水物質會使平衡往右移動，加水則不會", "加水只影響溶解度，不影響平衡"],
+    ans: 1,
+    explain: "加水的作用是「灌水讓整體體積變大」（破壞平衡），而不是單純增加一種不變濃度的物質。這是「加水稀釋」與「加入某反應物」的根本概念差異。"
+  },
+  {
+    q: "加入氫氧化鈉（NaOH）固體的主要目的為何？",
+    opts: ["提供 Na⁺ 作為反應物", "增加溶液體積以稀釋系統", "解離出氫氧根離子（OH⁻），用來中和或消耗系統中的氫離子（H⁺）", "使溶液變成固態"],
+    ans: 2,
+    explain: "加入氫氧化鈉（NaOH）固體的目的：解離出氫氧根離子（OH⁻），用來中和或消耗系統中的氫離子（H⁺）——這是鹼性破壞平衡的典型機制。"
+  },
+  {
+    q: "系統中 H⁺ 莫耳數被消耗後，平衡通常往哪個方向移動？",
+    opts: ["往消耗 H⁺ 的方向（向右）移動", "往生成 H⁺ 的方向（通常向左）移動，以補充 H⁺ 的減少", "平衡不移動，因為 H⁺ 不是主要反應物", "往使溶液呈鹼性的方向移動"],
+    ans: 1,
+    explain: "消耗 H⁺ 對平衡的影響：H⁺ 莫耳數瞬間下降，系統為了彌補 H⁺ 的減少，平衡會朝向生成 H⁺ 的方向（通常為向左）移動。"
+  },
+  {
+    q: "加入二鉻酸鉀的主要目的是什麼？",
+    opts: ["提供氫離子使溶液酸化", "為系統提供二鉻酸根離子（Cr₂O₇²⁻），使該離子莫耳數瞬間飆升", "增加系統的體積", "作為催化劑加快反應速率"],
+    ans: 1,
+    explain: "加入二鉻酸鉀的目的：為系統提供二鉻酸根離子（Cr₂O₇²⁻），使該離子莫耳數瞬間飆升，破壞原有的化學平衡。"
+  },
+  {
+    q: "反應物濃度飆升對平衡有何影響？",
+    opts: ["平衡不會受反應物濃度影響", "反應物莫耳數上升，破壞原有平衡，系統會朝著消耗該物質的方向移動", "平衡往生成更多反應物的方向移動", "只有溫度改變才能破壞平衡"],
+    ans: 1,
+    explain: "反應物濃度飆升對平衡的影響：反應物莫耳數上升，破壞原有平衡，系統會朝著消耗該物質的方向移動——這就是勒沙特列原理最基本的應用。"
+  },
+  {
+    q: "加入氯化氫（HCl）氣體後，系統的 H⁺ 如何改變？",
+    opts: ["H⁺ 濃度下降，因為 HCl 是氣體", "HCl 溶於水會解離出氫離子（H⁺），導致系統中的 H⁺ 莫耳數上升", "HCl 不解離，以分子形式存在於溶液中", "H⁺ 先上升後立刻被消耗殆盡"],
+    ans: 1,
+    explain: "加入氯化氫（HCl）氣體的影響：HCl 溶於水會解離出氫離子（H⁺），導致系統中的 H⁺ 莫耳數上升，進而破壞平衡。"
+  },
+  {
+    q: "硝酸鹽類的特性為何？",
+    opts: ["在水中只部分溶解，且常參與化學平衡反應", "丟入水中會完全解離，且硝酸根（NO₃⁻）通常對化學平衡系統無害、不干擾反應", "硝酸根會和大多數陽離子形成沉澱", "硝酸鹽類只溶於酸性溶液"],
+    ans: 1,
+    explain: "硝酸鹽類的特性：丟入水中會完全解離，且硝酸根（NO₃⁻）通常對化學平衡系統無害、不干擾反應。這就是為什麼加硝酸鋇、硝酸銀的目的只是提供特定陽離子。"
+  },
+  {
+    q: "硝酸根（NO₃⁻）在水溶液中的主要作用為何？",
+    opts: ["與 Fe³⁺ 反應生成沉澱", "不參與化學反應也不沉澱，主要作用是維持水溶液的「電中性」（正負電荷平衡）", "加速化學平衡的移動", "作為氫離子的來源"],
+    ans: 1,
+    explain: "硝酸根（NO₃⁻）在水溶液中不參與化學反應也不沉澱，主要作用是維持水溶液的「電中性」（正負電荷平衡）。它是「旁觀者離子」的典型代表。"
+  },
+  {
+    q: "加入硝酸鋇的目的是什麼？",
+    opts: ["提供硝酸根以酸化溶液", "提供 OH⁻ 以鹼化溶液", "純粹為了提供鋇離子（Ba²⁺），且不會引入干擾系統的陰離子", "增加溶液中 H⁺ 的濃度"],
+    ans: 2,
+    explain: "加入硝酸鋇的目的：純粹為了提供鋇離子（Ba²⁺），且不會引入干擾系統的陰離子（NO₃⁻ 是旁觀者離子）。這是精準控制實驗條件的常見技巧。"
+  },
+  {
+    q: "鋇離子（Ba²⁺）與鉻酸根（CrO₄²⁻）會發生什麼反應？",
+    opts: ["生成可溶性的鉻酸鋇溶液", "鋇離子不與鉻酸根反應", "鋇離子與鉻酸根（CrO₄²⁻）產生「鉻酸鋇」的沉澱（口訣：銀鍋鉛與鉻酸根沉澱）", "生成橘色的二鉻酸鋇沉澱"],
+    ans: 2,
+    explain: "鋇離子（Ba²⁺）的沉澱反應：鋇離子會與鉻酸根（CrO₄²⁻）產生「鉻酸鋇」的沉澱。口訣：「銀鍋鉛與鉻酸根沉澱」——記住哪些陽離子能讓鉻酸根沉澱！"
+  },
+  {
+    q: "產生沉澱對化學平衡系統有何影響？",
+    opts: ["沉澱物會加速反應速率", "沉澱等同於將該離子（如鉻酸根）從水中抽走，使其莫耳數下降，迫使平衡朝向補充該離子的方向移動", "沉澱物不影響溶液中的平衡", "沉澱使系統體積縮小，進而改變平衡"],
+    ans: 1,
+    explain: "產生沉澱對平衡系統的影響：沉澱等同於將該離子（如鉻酸根）從水中抽走，使其莫耳數下降，迫使平衡朝向補充該離子的方向移動。"
+  },
+  {
+    q: "氣體反應中，Δn（係數變化）的計算方式為何？",
+    opts: ["反應物氣體係數和 − 產物氣體係數和", "Δn = 產物氣體係數和 − 反應物氣體係數和；若 Δn = 0，改變體積不會有哪一邊具備優勢", "所有物質（含固體液體）的係數總和", "Δn = 最大係數 − 最小係數"],
+    ans: 1,
+    explain: "氣體反應的係數變化（Δn）：Δn = 產物氣體係數和 − 反應物氣體係數和。若 Δn = 0，改變體積不會讓任何一邊具備優勢，平衡不移動。"
+  },
+  {
+    q: "若氣體反應方程式左右氣體係數相等（Δn = 0），壓縮體積後平衡如何？",
+    opts: ["平衡朝右移動", "平衡朝左移動", "平衡不會發生移動", "平衡移動方向無法預測"],
+    ans: 2,
+    explain: "若反應方程式左右氣體係數相等（Δn = 0），壓縮或膨脹體積時，平衡「不會發生移動」——兩邊同等受益（或受損），沒有哪邊具備優勢。"
+  },
+  {
+    q: "氣體加壓的直覺操作方式為何？",
+    opts: ["升高溫度", "加入更多氣體", "利用活塞或針筒將「體積縮小」，等同於對氣體系統加壓", "移除部分氣體"],
+    ans: 2,
+    explain: "氣體加壓的直覺操作：利用活塞或針筒，將「體積縮小」，等同於對氣體系統加壓。記住：壓縮體積 = 加壓；膨脹體積 = 減壓。"
+  },
+  {
+    q: "在 2NO₂ ⇌ N₂O₄ 系統中，NO₂ 與 N₂O₄ 各呈什麼顏色？",
+    opts: ["NO₂ 無色；N₂O₄ 紅棕色", "NO₂ 紅棕色；N₂O₄ 無色", "兩者都是紅棕色", "兩者都無色"],
+    ans: 1,
+    explain: "顏色差異：NO₂（二氧化氮）呈現紅棕色；N₂O₄（四氧化二氮）為無色。這個顏色差異讓我們能用顏色深淺來判斷平衡移動方向！"
+  },
+  {
+    q: "對 2NO₂ ⇌ N₂O₄ 系統體積縮小（加壓）後，平衡移動方向為何？",
+    opts: ["朝左移動，生成更多 NO₂", "平衡不移動，因為是氣體系統", "朝右移動，因為右邊係數（1）小於左邊係數（2）", "先朝右再朝左，達到新平衡"],
+    ans: 2,
+    explain: "2NO₂ ⇌ N₂O₄：左邊係數為 2，右邊係數為 1。體積縮小後，空間變小，不需要那麼多粒子，因此平衡朝向「氣體係數和較少」的一方移動，即「朝右」移動。"
+  },
+  {
+    q: "體積縮小的瞬間，濃度變化圖的特徵為何？",
+    opts: ["只有 NO₂ 的濃度上升，N₂O₄ 不變", "所有氣體的濃度都瞬間往上跳升（在圖表上產生垂直向上的斷層）", "所有濃度瞬間下降", "濃度緩慢上升"],
+    ans: 1,
+    explain: "體積縮小瞬間的濃度變化圖特徵：所有氣體的濃度都瞬間往上跳升（在圖表上產生垂直向上的斷層）。這是「同步同向跳升」，代表系統受到了整體的體積變化破壞。"
+  },
+  {
+    q: "對 2NO₂ ⇌ N₂O₄ 系統體積縮小後，NO₂（紅棕色）顏色的最終結果為何？",
+    opts: ["最終顏色比一開始更淺", "最終顏色與一開始完全相同", "最終顏色比一開始操作前「更深」（因破壞效應 > 移動效應）", "顏色完全消失，溶液變無色"],
+    ans: 2,
+    explain: "體積縮小後 NO₂ 顏色的最終結果：即使平衡向右移動消耗了一些 NO₂，最終顏色仍比一開始未操作前「更深」——因為破壞效應（加壓使濃度大增）大於移動效應（消耗 NO₂）。"
+  },
+  {
+    q: "對 2NO₂ ⇌ N₂O₄ 系統體積變大（減壓）後，NO₂ 顏色的最終結果為何？",
+    opts: ["最終顏色比一開始更深", "最終顏色維持不變", "最終顏色比一開始操作前「更淺」（稀釋效應大於平衡移動補充效應）", "顏色先消失後恢復"],
+    ans: 2,
+    explain: "體積變大後 NO₂ 顏色的最終結果：補償不及體積變大的稀釋效應，最終顏色仍比一開始操作前「更淺」。這與稀釋類似——破壞效應永遠大於移動效應。"
+  },
+  {
+    q: "化學「定性分析（Qualitative Analysis）」與「定量分析（Quantitative Analysis）」的差異為何？",
+    opts: [
+      "定性分析只用於氣體，定量分析只用於溶液",
+      "定性分析判斷濃度或反應方向的「趨勢」（上升、下降、不變、向左、向右），而不探討確切數值；定量分析精確計算實際改變數值",
+      "定性分析比定量分析更精確",
+      "兩者沒有實質差異，只是名稱不同"
+    ],
+    ans: 1,
+    explain: "定性分析（Qualitative）：判斷濃度或反應方向的「趨勢」（上升、下降、不變、向左、向右），而不探討確切數值。定量分析（Quantitative）：精確計算濃度、壓力或莫耳數在平衡移動過程中的實際改變數值。"
+  },
+  {
+    q: "勒沙特列原理的本質可以用一句話總結為何？",
+    opts: [
+      "系統總是往使所有物質濃度最大化的方向移動",
+      "系統總是試圖「減緩」外加的變化，但永遠無法「完全抵銷」外加的變化",
+      "系統永遠朝右（產物方向）移動",
+      "加水必定使所有物質的莫耳數下降"
+    ],
+    ans: 1,
+    explain: "勒沙特列原理的本質：系統總是試圖「減緩」外加的變化，但永遠無法「完全抵銷」外加的變化。這就是為什麼加水稀釋後，即使平衡往多粒子方向移動，最終濃度仍比原本低。"
+  },
+  {
+    q: "解題的核心步驟（SOP）依序為何？",
+    opts: [
+      "先算Δn → 判斷移動方向 → 找破壞手段 → 比對最終結果",
+      "找出破壞手段（如加水）→ 畫出瞬間濃度變化 → 判斷係數定出移動方向 → 畫出後續平滑曲線 → 比對最終結果",
+      "先判斷顏色變化 → 再計算莫耳數 → 最後確認平衡方向",
+      "直接計算平衡常數 → 比較Q與K → 判斷移動方向"
+    ],
+    ans: 1,
+    explain: "解題核心步驟SOP：①找出破壞手段（如加水）→ ②畫出瞬間濃度變化 → ③判斷係數定出移動方向 → ④畫出後續平滑曲線 → ⑤比對最終結果。按這個流程走，平衡題就不會出錯！"
+  }
+];
+
+/* ═══════════════════════════════════════════════════
+   THEMES
+═══════════════════════════════════════════════════ */
+const THEMES = [
+  { label:"深藍", bg:"#0f1923", surface:"#1a2736", surface2:"#223044", border:"#2d4a63", text:"#e8f4f8", muted:"#8badc0" },
+  { label:"深紫", bg:"#100e1a", surface:"#1c1830", surface2:"#251f3f", border:"#3a2f6a", text:"#f0ecff", muted:"#9b8fc0" },
+  { label:"深綠", bg:"#0d1a12", surface:"#162a1c", surface2:"#1f3828", border:"#2d5a3a", text:"#e0f5e6", muted:"#7baf8a" },
+  { label:"米白", bg:"#f5f0e8", surface:"#fdf8f0", surface2:"#ece5d6", border:"#d4c9b0", text:"#2c2416", muted:"#7a6e5a" },
+  { label:"石板", bg:"#1a1a2e", surface:"#16213e", surface2:"#0f3460", border:"#1a4a7a", text:"#e2e8f8", muted:"#8090b8" }
+];
+
+let currentTheme = 0;
+function buildSwatches() {
+  const wrap = document.getElementById('swatches');
+  THEMES.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'swatch' + (i === 0 ? ' active' : '');
+    el.style.background = t.bg;
+    if (t.bg === '#f5f0e8') el.style.border = '2px solid #d4c9b0';
+    el.title = t.label;
+    el.onclick = () => setTheme(i);
+    wrap.appendChild(el);
+  });
+}
+function setTheme(idx) {
+  currentTheme = idx;
+  const t = THEMES[idx];
+  const r = document.documentElement.style;
+  r.setProperty('--bg', t.bg); r.setProperty('--surface', t.surface);
+  r.setProperty('--surface2', t.surface2); r.setProperty('--border', t.border);
+  r.setProperty('--text', t.text); r.setProperty('--text-muted', t.muted);
+  document.querySelectorAll('.swatch').forEach((s, i) => s.classList.toggle('active', i === idx));
+}
+
+/* ═══════════════════════════════════════════════════
+   FONT SIZE
+═══════════════════════════════════════════════════ */
+let fontSize = 16;
+function changeFont(delta) {
+  fontSize = Math.min(22, Math.max(12, fontSize + delta));
+  document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+  document.getElementById('fontDisplay').textContent = fontSize;
+}
+
+/* ═══════════════════════════════════════════════════
+   AUDIO ENGINE
+═══════════════════════════════════════════════════ */
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(config) {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    config.forEach(({ freq, type='sine', start=0, dur=0.15, vol=0.3 }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e) {}
+}
+function soundCorrect() {
+  playTone([
+    { freq:523, type:'triangle', start:0, dur:0.12, vol:0.25 },
+    { freq:659, type:'triangle', start:0.1, dur:0.12, vol:0.25 },
+    { freq:784, type:'triangle', start:0.2, dur:0.2, vol:0.3 }
+  ]);
+}
+function soundWrong() {
+  playTone([
+    { freq:300, type:'sawtooth', start:0, dur:0.12, vol:0.2 },
+    { freq:220, type:'sawtooth', start:0.1, dur:0.15, vol:0.2 }
+  ]);
+}
+function soundFinish() {
+  [523,587,659,698,784,880].forEach((f,i) => {
+    playTone([{ freq:f, type:'triangle', start:i*0.1, dur:0.18, vol:0.22 }]);
+  });
+}
+function soundClick() {
+  playTone([{ freq:880, type:'sine', start:0, dur:0.06, vol:0.12 }]);
+}
+
+/* ═══════════════════════════════════════════════════
+   QUIZ ENGINE
+═══════════════════════════════════════════════════ */
+let shuffledQuestions = [], currentIdx = 0, correctCount = 0, wrongCount = 0, answered = false, streak = 0, streakTimer = null;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function startQuiz() {
+  soundClick();
+  shuffledQuestions = shuffle(QUESTIONS).map(q => {
+    const indices = q.opts.map((_,i)=>i);
+    const si = shuffle(indices);
+    return { ...q, opts: si.map(i=>q.opts[i]), ans: si.indexOf(q.ans) };
+  });
+  currentIdx = 0; correctCount = 0; wrongCount = 0; streak = 0;
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('quizArea').classList.remove('hidden');
+  const badge = document.getElementById('scoreBadge');
+  badge.style.display = '';
+  updateScoreBadge();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = shuffledQuestions[currentIdx];
+  const total = shuffledQuestions.length;
+  const pct = Math.round((currentIdx/total)*100);
+  document.getElementById('qProgress').textContent = `第 ${currentIdx+1} 題 / 共 ${total} 題`;
+  document.getElementById('qPercent').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('questionText').textContent = q.q;
+  const letters = ['A','B','C','D'];
+  const list = document.getElementById('optionsList');
+  list.innerHTML = '';
+  q.opts.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span class="opt-text">${opt}</span>`;
+    btn.onclick = () => selectOption(i);
+    list.appendChild(btn);
+  });
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').className = 'next-btn';
+}
+
+function selectOption(selectedIdx) {
+  if (answered) return;
+  answered = true;
+  soundClick();
+  const q = shuffledQuestions[currentIdx];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedback');
+  if (selectedIdx === q.ans) {
+    correctCount++; streak++;
+    btns[selectedIdx].classList.add('correct');
+    soundCorrect();
+    fb.className = 'feedback correct-fb show';
+    document.getElementById('fbEmoji').textContent = getCorrectEmoji();
+    document.getElementById('fbTitle').textContent = getCorrectTitle();
+    document.getElementById('fbExplain').textContent = q.explain;
+    if (streak >= 3) showStreakToast();
+  } else {
+    wrongCount++; streak = 0;
+    btns[selectedIdx].classList.add('wrong');
+    btns[q.ans].classList.add('reveal');
+    soundWrong();
+    fb.className = 'feedback wrong-fb show';
+    document.getElementById('fbEmoji').textContent = '💡';
+    document.getElementById('fbTitle').textContent = '答錯了！來看看正確解析';
+    document.getElementById('fbExplain').textContent = q.explain;
+  }
+  updateScoreBadge();
+  const nb = document.getElementById('nextBtn');
+  const isLast = currentIdx === shuffledQuestions.length - 1;
+  nb.textContent = isLast ? '查看成績 🎯' : '下一題 →';
+  nb.className = 'next-btn show';
+}
+
+function getCorrectEmoji() {
+  return ['🎉','⚡','🔥','🌟','🎯','✨','💪','🚀','🧪','⚗️'][Math.floor(Math.random()*10)];
+}
+function getCorrectTitle() {
+  return ['答對了！你太強了！','完全正確！繼續保持！','太棒了！理解得很透徹！','讚！化學高手在此！','完美！勒沙特列都在看著你！'][Math.floor(Math.random()*5)];
+}
+function showStreakToast() {
+  const t = document.getElementById('streakToast');
+  t.textContent = `🔥 連答 ${streak} 題正確！`;
+  t.classList.add('show');
+  clearTimeout(streakTimer);
+  streakTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+function updateScoreBadge() {
+  document.getElementById('scoreNum').textContent = correctCount;
+  document.getElementById('scoreDen').textContent = currentIdx + (answered ? 1 : 0);
+}
+function nextQuestion() {
+  soundClick();
+  currentIdx++;
+  if (currentIdx >= shuffledQuestions.length) { showResult(); }
+  else { renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+}
+function showResult() {
+  document.getElementById('quizArea').classList.add('hidden');
+  const total = shuffledQuestions.length;
+  const pct = Math.round((correctCount/total)*100);
+  let emoji='😊', title='還不錯喔！', sub='再多練習幾次就能更上層樓！';
+  if (pct>=90){emoji='🏆';title='化學大師！';sub='幾乎全對，平衡移動是你的強項！';}
+  else if(pct>=75){emoji='🌟';title='表現優秀！';sub='熟練度很高，再鞏固一下細節！';}
+  else if(pct>=60){emoji='📚';title='繼續加油！';sub='掌握了大部分概念，繼續練習！';}
+  else{emoji='🧪';title='需要複習一下！';sub='建議重新看一遍字卡，再來練習！';}
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSub').textContent = sub;
+  document.getElementById('resultBigNum').innerHTML = `${correctCount}<span class="result-big-denom">/${total}</span>`;
+  document.getElementById('rCorrect').textContent = correctCount;
+  document.getElementById('rWrong').textContent = wrongCount;
+  document.getElementById('rPct').textContent = pct + '%';
+  document.getElementById('resultScreen').classList.add('show');
+  document.getElementById('scoreBadge').style.display = 'none';
+  soundFinish();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function restartQuiz() {
+  soundClick();
+  document.getElementById('resultScreen').classList.remove('show');
+  startQuiz();
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  buildSwatches();
+  document.getElementById('qCountDisplay').textContent = QUESTIONS.length + ' 題';
+});
+</script>
+</body>
+</html>
